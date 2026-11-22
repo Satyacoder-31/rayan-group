@@ -206,19 +206,25 @@ export function registerPayrollModules(FinanceApp) {
     } else {
       this.db.employees_initialized = true;
 
-      // Ensure Nadeem Akhtar Nazmul Hoda is recognized as EN12001
-      let nadeem = this.db.employees.find(e => e.id === 'emp-mwlpkkbr' || (e.name && e.name.toLowerCase().includes('nadeem')));
+      // Ensure Nadeem Akhtar Nazmul Hoda is recognized as EN12001 with accurate resigned status and exit date
+      let nadeem = this.db.employees.find(e => e.id === 'emp-mwlpkkbr' || e.id === 'emp-en12001' || (e.name && e.name.toLowerCase().includes('nadeem')));
       if (nadeem) {
-        nadeem.employee_no = nadeem.employee_no || 'EN12001';
+        nadeem.id = 'emp-en12001';
+        nadeem.employee_no = 'EN12001';
         nadeem.name = nadeem.name || 'Nadeem Akhtar Nazmul Hoda';
         nadeem.name_ar = nadeem.name_ar || 'نديم اختر نظم هدي';
         nadeem.position = nadeem.position || 'Civil Engineer';
         nadeem.position_ar = nadeem.position_ar || 'مهندس مدني';
         nadeem.passport_no = nadeem.passport_no || 'U3566719';
         nadeem.emirates_id = nadeem.emirates_id || '784-1998-3368120-0';
-        nadeem.phone = nadeem.phone || '+971 555411543';
+        nadeem.phone = nadeem.phone || '+971565786874';
         nadeem.email = nadeem.email || 'nadeem.hmsit@gmail.com';
         nadeem.company_id = nadeem.company_id || this.activeCompanyId || 'rayan-corp-uae';
+        nadeem.status = nadeem.status || 'Resigned';
+        if (!nadeem.end_date) nadeem.end_date = '2025-02-26';
+        if (!nadeem.resignation_date) nadeem.resignation_date = '2025-02-26';
+        if (!nadeem.date_of_leaving) nadeem.date_of_leaving = '2025-02-26';
+        if (!nadeem.end_reason) nadeem.end_reason = 'Personal Reason';
       }
 
       // Bakhteyar Alam Mokhtar Ahmad EN12009
@@ -303,6 +309,27 @@ export function registerPayrollModules(FinanceApp) {
           if (e.name && e.name.toLowerCase().includes('shafiur')) {
             e.id = 'emp-en12004';
             e.employee_no = 'EN12004';
+          }
+          // Ensure all resigned and terminated staff have their authoritative exit date and reason
+          const knownExits = {
+            'EN12001': { end_date: '2025-02-26', status: 'Resigned', reason: 'Personal Reason', rehire: 'yes' },
+            'EN12002': { end_date: '2025-08-01', status: 'Resigned', reason: 'Personal / Relocated', rehire: 'yes' },
+            'EN12003': { end_date: '2025-07-25', status: 'Resigned', reason: 'Personal Reason', rehire: 'yes' },
+            'EN12004': { end_date: '2024-10-20', status: 'Terminated', reason: 'Employee takes leave and does not return to work', rehire: 'no' },
+            'EN12005': { end_date: '2024-10-21', status: 'Terminated', reason: 'Absconding / did not return after leave', rehire: 'no' }
+          };
+          const exitInfo = knownExits[(e.employee_no || '').toUpperCase()];
+          if (exitInfo) {
+            if (!e.end_date && !e.resignation_date) {
+              e.end_date = exitInfo.end_date;
+              e.resignation_date = exitInfo.end_date;
+              e.date_of_leaving = exitInfo.end_date;
+            }
+            if (!e.status || e.status === 'Active') {
+              e.status = exitInfo.status;
+            }
+            if (!e.end_reason) e.end_reason = exitInfo.reason;
+            if (!e.eligible_for_rehire) e.eligible_for_rehire = exitInfo.rehire;
           }
         });
         // Deduplicate to avoid collisions
@@ -748,9 +775,9 @@ export function registerPayrollModules(FinanceApp) {
             <span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.7rem; font-weight:700; color:${statusColor}; background:${statusBg}; border:1px solid ${statusBorder};">
               ${escapeHtml(statusLabel)}
             </span>
-            ${((isResigned || isTerminated) && (emp.end_date || emp.resignation_date)) ? `
-              <div style="font-size:0.65rem; color:${statusColor}; margin-top:2px; font-family:monospace;" title="${isTerminated ? 'Termination date' : 'Resignation / Last working day'}">
-                ${isTerminated ? 'Terminated:' : 'Left:'} ${escapeHtml(emp.end_date || emp.resignation_date)}
+            ${(isResigned || isTerminated) ? `
+              <div style="font-size:0.68rem; color:${statusColor}; margin-top:3px; font-weight:700; font-family:monospace;" title="${isTerminated ? 'Termination date' : 'Resignation / Last working day'}">
+                📅 ${isTerminated ? 'Terminated:' : 'Left:'} ${escapeHtml(emp.end_date || emp.resignation_date || emp.date_of_leaving || '---')}
               </div>
             ` : ''}
             <!-- Rehire Eligibility Badge ONLY for former/inactive employees (NOT for active employees) -->
@@ -1333,6 +1360,25 @@ export function registerPayrollModules(FinanceApp) {
     const accAllowance = emp ? Number(emp.accommodation_allowance || 0) : '';
     const otherAllowance = emp ? Number(emp.other_allowance || 0) : '';
 
+    // Normalize End Date to YYYY-MM-DD for standard date input
+    let endDateYMD = emp?.end_date || emp?.resignation_date || emp?.date_of_leaving || '';
+    if (endDateYMD && endDateYMD.includes('/')) {
+      const parts = endDateYMD.split('/');
+      if (parts.length === 3 && parts[2].length === 4) {
+        endDateYMD = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+      }
+    }
+    if (!endDateYMD && (emp?.status === 'Resigned' || emp?.status === 'Terminated')) {
+      const knownExits = {
+        'EN12001': '2025-02-26',
+        'EN12002': '2025-08-01',
+        'EN12003': '2025-07-25',
+        'EN12004': '2024-10-20',
+        'EN12005': '2024-10-21'
+      };
+      endDateYMD = knownExits[(emp?.employee_no || '').toUpperCase()] || '';
+    }
+
     const hasPhoto = Boolean(emp?.photo);
 
     const html = `
@@ -1611,7 +1657,7 @@ export function registerPayrollModules(FinanceApp) {
                 <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                   <div class="fin-form-group" style="margin-bottom:0;">
                     <label class="fin-field-label" style="color:#fca5a5;">End Date / Last Working Day <span style="color:#ef4444;">*</span></label>
-                    <input type="date" name="end_date" id="fin-emp-end-date" class="fin-form-input" value="${emp?.end_date || emp?.resignation_date || ''}" style="border-color:rgba(239,68,68,0.45); font-weight:700;">
+                    <input type="date" name="end_date" id="fin-emp-end-date" class="fin-form-input" value="${endDateYMD}" style="border-color:rgba(239,68,68,0.45); font-weight:700;">
                     <span style="font-size:0.68rem; color:#94a3b8;">Effective date of resignation / departure</span>
                   </div>
                   <div class="fin-form-group" style="margin-bottom:0;">
@@ -2029,6 +2075,28 @@ export function registerPayrollModules(FinanceApp) {
       return;
     }
 
+    // Ensure all resigned and terminated staff have authoritative exit date and reason
+    const knownExits = {
+      'EN12001': { end_date: '2025-02-26', status: 'Resigned', reason: 'Personal Reason', rehire: 'yes' },
+      'EN12002': { end_date: '2025-08-01', status: 'Resigned', reason: 'Personal / Relocated', rehire: 'yes' },
+      'EN12003': { end_date: '2025-07-25', status: 'Resigned', reason: 'Personal Reason', rehire: 'yes' },
+      'EN12004': { end_date: '2024-10-20', status: 'Terminated', reason: 'Employee takes leave and does not return to work', rehire: 'no' },
+      'EN12005': { end_date: '2024-10-21', status: 'Terminated', reason: 'Absconding / did not return after leave', rehire: 'no' }
+    };
+    const exitFallback = knownExits[(emp.employee_no || '').toUpperCase()];
+    if (exitFallback) {
+      if (!emp.end_date && !emp.resignation_date) {
+        emp.end_date = exitFallback.end_date;
+        emp.resignation_date = exitFallback.end_date;
+        emp.date_of_leaving = exitFallback.end_date;
+      }
+      if (!emp.status || emp.status === 'Active') {
+        emp.status = exitFallback.status;
+      }
+      if (!emp.end_reason) emp.end_reason = exitFallback.reason;
+      if (!emp.eligible_for_rehire) emp.eligible_for_rehire = exitFallback.rehire;
+    }
+
     // Calculate all recorded salary payouts from payroll table
     const allSlips = (this.db?.payroll || []).filter(p => {
       return p.employee_id === emp.id || 
@@ -2139,7 +2207,7 @@ export function registerPayrollModules(FinanceApp) {
                   </span>
                   <!-- Distinct Status Badge (Amber for Resigned, Red for Terminated, Green for Active) -->
                   <span style="font-size:0.72rem; padding:2px 9px; border-radius:12px; background:${statusBg}; color:${statusColor}; font-weight:800; border:1px solid ${statusBorder};">
-                    ${escapeHtml(statusLabel)}${((isResigned || isTerminated) && (emp.end_date || emp.resignation_date)) ? ` • ${isTerminated ? 'Terminated' : 'Relieved'}: ${escapeHtml(emp.end_date || emp.resignation_date)}` : ''}
+                    ${escapeHtml(statusLabel)}${((isResigned || isTerminated) && (emp.end_date || emp.resignation_date)) ? ` • ${isTerminated ? 'Terminated' : 'Relieved / Left'}: ${escapeHtml(emp.end_date || emp.resignation_date)}` : ''}
                   </span>
                   <span style="font-size:0.72rem; padding:2px 8px; border-radius:6px; background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1);">
                     ${(emp.gender || '').toLowerCase() === 'female' ? '👩 Female' : '👨 Male'}
@@ -2296,7 +2364,7 @@ export function registerPayrollModules(FinanceApp) {
                 </div>
                 <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:0.6rem; margin-top:0.75rem; font-size:0.75rem; color:#94a3b8; display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px;">
                   <span>Joined: <strong style="color:#cbd5e1;">${escapeHtml(emp.date_of_joining || '---')}</strong></span>
-                  ${(emp.end_date || emp.resignation_date) ? `<span>End Date: <strong style="color:#ef4444;">${escapeHtml(emp.end_date || emp.resignation_date)}</strong></span>` : ''}
+                  ${(emp.end_date || emp.resignation_date) ? `<span>${emp.status === 'Terminated' ? 'Termination Date' : 'End / Resignation Date'}: <strong style="color:#ef4444; font-weight:800;">${escapeHtml(emp.end_date || emp.resignation_date)}</strong></span>` : ''}
                   <span>Tenure: <strong style="color:${(emp.end_date || emp.resignation_date) ? '#f87171' : '#10b981'};">${tenureStr}</strong></span>
                 </div>
                 ${(emp.end_reason || emp.resignation_reason) ? `
@@ -2605,6 +2673,28 @@ export function registerPayrollModules(FinanceApp) {
     const lifetimePaid = allSlips.filter(p => (p.status || '').toLowerCase() === 'paid')
       .reduce((sum, p) => sum + (Number(p.net_pay) || Number(p.total_earnings) || 0), 0);
 
+    const isExit = (emp.status === 'Resigned' || emp.status === 'Terminated');
+    let rawExitDate = emp.end_date || emp.resignation_date || emp.date_of_leaving || emp.exit_date || '';
+    if (!rawExitDate && isExit) {
+      const knownExits = {
+        'EN12001': '2025-02-26',
+        'EN12002': '2025-08-01',
+        'EN12003': '2025-07-25',
+        'EN12004': '2024-10-20',
+        'EN12005': '2024-10-21'
+      };
+      rawExitDate = knownExits[(emp.employee_no || '').toUpperCase()] || '';
+    }
+    let exitDateDisplay = rawExitDate;
+    if (rawExitDate) {
+      try {
+        const parts = rawExitDate.split('-');
+        if (parts.length === 3 && parts[0].length === 4) {
+          exitDateDisplay = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+      } catch (e) {}
+    }
+
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       alert('Please allow popups to print the Employee Profile Dossier.');
@@ -2656,9 +2746,12 @@ export function registerPayrollModules(FinanceApp) {
           </div>
           <div style="flex: 1;">
             <div style="font-size: 13pt; font-weight: 800; color: #0f172a;">${escapeHtml(emp.name)} ${emp.name_ar ? `(${escapeHtml(emp.name_ar)})` : ''}</div>
-            <div style="font-size: 9.5pt; font-weight: 700; color: #0284c7; margin: 2px 0;">${escapeHtml(emp.position || emp.designation || 'Staff')} • ${escapeHtml(emp.department || 'Rayan')}</div>
+            <div style="font-size: 9.5pt; font-weight: 700; color: #0284c7; margin: 2px 0;">${escapeHtml(emp.position || emp.designation || 'Staff')} • ${escapeHtml(emp.department || 'Rayan Engineering')}</div>
             <div style="font-size: 8pt; color: #475569;">
-              Status: <strong>${escapeHtml(emp.status || 'Active')}</strong> • Joining Date: <strong>${escapeHtml(emp.date_of_joining || '---')}</strong> • Project: <strong>${escapeHtml(emp.project_name || 'Corporate Overhead')}</strong>
+              Status: <strong style="color:${(emp.status === 'Resigned' ? '#b45309' : (emp.status === 'Terminated' ? '#dc2626' : '#15803d'))};">${escapeHtml(emp.status || 'Active')}</strong>
+              • Joining Date: <strong>${escapeHtml(emp.date_of_joining || '---')}</strong>
+              ${isExit ? `• <span style="color:#dc2626; font-weight:800;">${emp.status === 'Terminated' ? 'Termination Date' : 'Resignation / End Date'}: <u>${escapeHtml(exitDateDisplay || '---')}</u></span>` : ''}
+              • Project: <strong>${escapeHtml(emp.project_name || 'Corporate Overhead')}</strong>
             </div>
           </div>
         </div>
@@ -2705,30 +2798,29 @@ export function registerPayrollModules(FinanceApp) {
           <tr>
             <th>Labor Card No.</th>
             <td style="font-family:monospace;">${escapeHtml(emp.labor_card_no || '---')}</td>
-            <th>Payment Channel</th>
-            <td>${escapeHtml(emp.default_pay_method || 'Bank Transfer')}</td>
-          </tr>
-          <tr>
-            <th>Payment Channel</th>
-            <td>${escapeHtml(emp.default_pay_method || 'Bank Transfer')}</td>
             <th>Bank Name</th>
             <td>${escapeHtml(emp.bank_name || 'Cash / On-Hand')}</td>
           </tr>
           <tr>
+            <th>Payment Channel</th>
+            <td style="font-weight:600;">${escapeHtml(emp.default_pay_method || 'Bank Transfer')}</td>
             <th>IBAN / Account</th>
-            <td style="font-family:monospace; font-weight:600;" colspan="${(emp.status === 'Resigned' || emp.status === 'Terminated') ? '1' : '3'}">${escapeHtml(emp.iban || emp.account_no || '---')}</td>
-            ${(emp.status === 'Resigned' || emp.status === 'Terminated') ? `
+            <td style="font-family:monospace; font-weight:600;" colspan="${isExit ? '1' : '1'}">${escapeHtml(emp.iban || emp.account_no || '---')}</td>
+          </tr>
+          ${isExit ? `
+          <tr>
+            <th style="color:#dc2626; background:#fef2f2;">Exit / Departure Date</th>
+            <td style="font-weight:800; color:#dc2626; font-size:9.5pt; background:#fff1f2;">${escapeHtml(exitDateDisplay || '---')}</td>
             <th>Rehire Eligibility</th>
             <td style="font-weight:700; color:${emp.eligible_for_rehire === 'no' || emp.eligible_for_rehire === false ? '#dc2626' : '#16a34a'};">
               ${emp.eligible_for_rehire === 'no' || emp.eligible_for_rehire === false ? '⛔ INELIGIBLE (Do Not Rehire)' : '✅ ELIGIBLE FOR REHIRE (Approved)'}
-            </td>` : ''}
+            </td>
           </tr>
-          ${(emp.status === 'Resigned' || emp.status === 'Terminated') ? `
           <tr>
-            <th>Exit / Departure Date</th>
-            <td style="font-weight:700; color:#dc2626;">${escapeHtml(emp.end_date || emp.resignation_date || '---')}</td>
+            <th>Reason for Leaving</th>
+            <td style="color:#334155;">${escapeHtml(emp.end_reason || emp.resignation_reason || 'Personal Reason')}</td>
             <th>Exit / Rehire Remarks</th>
-            <td>${escapeHtml(emp.rehire_notes || emp.end_reason || 'Clearance on file in accordance with corporate HR policy')}</td>
+            <td>${escapeHtml(emp.rehire_notes || 'Clearance on file in accordance with corporate HR policy')}</td>
           </tr>` : ''}
         </table>
 
