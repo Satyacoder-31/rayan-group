@@ -153,10 +153,10 @@ export function registerPayrollModules(FinanceApp) {
           nationality: 'India',
           nationality_ar: 'هندي',
           visa_status: 'Employment Visa (Rayan Engineering)',
-          basic_salary: 5000.00,
-          accommodation_allowance: 5000.00,
+          basic_salary: 9500.00,
+          accommodation_allowance: 5500.00,
           consolidated_allowance: 0.00,
-          other_allowance: 0.00,
+          other_allowance: 1500.00,
           bank_name: 'Emirates NBD Bank PJSC',
           swift: 'EBILAEADXXX',
           iban: '',
@@ -733,8 +733,11 @@ export function registerPayrollModules(FinanceApp) {
             </div>
           </td>
           <td style="text-align:right; padding:7px 10px; vertical-align:middle; white-space:nowrap;">
-            <div style="font-weight:800; color:#10b981; font-size:0.9rem;">
-              ${this.formatCurrency(totalSalary, emp.currency || 'AED')}
+            <div style="cursor:pointer; display:inline-block;" onclick="window.finApp.openQuickSalaryModal('${emp.id}')" title="Click to quickly change / edit salary &amp; allowances">
+              <div style="font-weight:800; color:#10b981; font-size:0.9rem; display:inline-flex; align-items:center; gap:4px;">
+                <span>${this.formatCurrency(totalSalary, emp.currency || 'AED')}</span>
+                <span style="font-size:0.68rem; color:#38bdf8; opacity:0.85;">✏️</span>
+              </div>
             </div>
           </td>
           <td style="padding:7px 10px; vertical-align:middle; white-space:nowrap;">
@@ -1302,7 +1305,10 @@ export function registerPayrollModules(FinanceApp) {
     if (removeBtn) removeBtn.style.display = 'none';
   };
 
-  proto.openEmployeeModal = function (empId = null) {
+  proto.openEmployeeModal = function (empId = null, fromProfile = false) {
+    if (fromProfile || document.getElementById('fin-emp-profile-modal-backdrop')) {
+      this._editingFromProfileEmpId = empId;
+    }
     let emp = null;
     if (empId) {
       const searchKey = String(empId).trim().toLowerCase();
@@ -1336,7 +1342,7 @@ export function registerPayrollModules(FinanceApp) {
     const hasPhoto = Boolean(emp?.photo);
 
     const html = `
-      <div class="fin-modal-backdrop open" id="fin-emp-modal-backdrop">
+      <div class="fin-modal-backdrop open" id="fin-emp-modal-backdrop" style="z-index: 100030;">
         <div class="fin-modal-dialog" style="max-width:860px; width:95%; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.25); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.12); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
           <!-- Executive Header -->
           <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.9) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
@@ -1719,7 +1725,14 @@ export function registerPayrollModules(FinanceApp) {
   };
 
   proto.closeEmployeeModal = function () {
+    const el = document.getElementById('fin-emp-modal-backdrop');
+    if (el) el.remove();
     this.closeCustomModal('fin-emp-modal-backdrop');
+    if (this._editingFromProfileEmpId) {
+      const pId = this._editingFromProfileEmpId;
+      this._editingFromProfileEmpId = null;
+      this.openEmployeeProfileModal(pId);
+    }
   };
 
   proto.saveEmployeeForm = async function (e) {
@@ -1890,7 +1903,14 @@ export function registerPayrollModules(FinanceApp) {
       });
     }
 
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+    const returnProfileId = this._editingFromProfileEmpId || (document.getElementById('fin-emp-profile-modal-backdrop') ? empObj.id : null);
+    this._editingFromProfileEmpId = null;
+
+    if (typeof this.saveDatabaseToCache === 'function') {
+      this.saveDatabaseToCache();
+    } else {
+      if (typeof this.saveDatabaseToCache === 'function') { this.saveDatabaseToCache(); } else { try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { } }
+    }
 
     this.closeEmployeeModal();
 
@@ -1919,9 +1939,8 @@ export function registerPayrollModules(FinanceApp) {
     }
 
     // If Employee Profile was open, update it in-place
-    const profBackdrop = document.getElementById('fin-emp-profile-modal-backdrop');
-    if (profBackdrop) {
-      this.openEmployeeProfileModal(empObj.id);
+    if (returnProfileId) {
+      this.openEmployeeProfileModal(returnProfileId);
     }
   };
 
@@ -1964,7 +1983,7 @@ export function registerPayrollModules(FinanceApp) {
       const eNo = String(e.employee_no || '').trim().toLowerCase();
       return eId !== idKey && eNo !== noKey;
     });
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+    if (typeof this.saveDatabaseToCache === 'function') { this.saveDatabaseToCache(); } else { try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { } }
 
     // Sync deletion with backend
     try {
@@ -2167,6 +2186,9 @@ export function registerPayrollModules(FinanceApp) {
 
             <!-- Header Quick Action Buttons -->
             <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-row-action" style="background:linear-gradient(135deg, rgba(16,185,129,0.22), rgba(56,189,248,0.22)); color:#10b981; border:1px solid rgba(16,185,129,0.45); padding:6px 12px; font-size:0.78rem; font-weight:700; cursor:pointer;" onclick="window.finApp.openQuickSalaryModal('${emp.id}')" title="Change or adjust salary &amp; allowances">
+                💵 Edit Salary
+              </button>
               <button type="button" class="fin-btn-row-action" style="background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); padding:6px 12px; font-size:0.78rem; font-weight:700; cursor:pointer;" onclick="window.finApp.openEmployeeModal('${emp.id}')" title="Edit Employee Profile">
                 ✏️ Edit Profile
               </button>
@@ -2194,27 +2216,38 @@ export function registerPayrollModules(FinanceApp) {
             
             <!-- 1. Executive Financial & Compensation Strip (6 KPIs Like Project Accounts) -->
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(155px, 1fr)); gap:0.85rem;">
-              <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1rem;">
-                <span style="font-size:0.7rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Monthly Basic</span>
+              <div onclick="window.finApp.openQuickSalaryModal('${emp.id}')" style="background:rgba(15,23,42,0.6); border:1px solid rgba(56,189,248,0.3); border-radius:12px; padding:1rem; cursor:pointer; position:relative; transition:all 0.15s ease;" onmouseover="this.style.borderColor='#38bdf8'; this.style.boxShadow='0 0 15px rgba(56,189,248,0.25)';" onmouseout="this.style.borderColor='rgba(56,189,248,0.3)'; this.style.boxShadow='none';" title="Click to change or adjust Monthly Basic Salary">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:0.7rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Monthly Basic</span>
+                  <span style="font-size:0.65rem; color:#38bdf8; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); padding:1px 6px; border-radius:4px; font-weight:700;">✏️ Edit</span>
+                </div>
                 <div style="font-size:1.35rem; font-weight:800; color:#f8fafc; margin-top:3px;">
                   ${this.formatCurrency(basic)}
                 </div>
                 <div style="font-size:0.68rem; color:#64748b;">Base contractual salary</div>
               </div>
 
-              <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1rem;">
-                <span style="font-size:0.7rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Allowances</span>
+              <div onclick="window.finApp.openQuickSalaryModal('${emp.id}')" style="background:rgba(15,23,42,0.6); border:1px solid rgba(56,189,248,0.3); border-radius:12px; padding:1rem; cursor:pointer; position:relative; transition:all 0.15s ease;" onmouseover="this.style.borderColor='#38bdf8'; this.style.boxShadow='0 0 15px rgba(56,189,248,0.25)';" onmouseout="this.style.borderColor='rgba(56,189,248,0.3)'; this.style.boxShadow='none';" title="Click to change or adjust Allowances">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:0.7rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Allowances</span>
+                  <span style="font-size:0.65rem; color:#38bdf8; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); padding:1px 6px; border-radius:4px; font-weight:700;">✏️ Edit</span>
+                </div>
                 <div style="font-size:1.35rem; font-weight:800; color:#38bdf8; margin-top:3px;">
                   ${this.formatCurrency(acc + oth)}
                 </div>
                 <div style="font-size:0.68rem; color:#64748b;">Acc: ${this.formatCurrency(acc)} ${oth > 0 ? `• Oth: ${this.formatCurrency(oth)}` : ''}</div>
               </div>
 
-              <div style="background:linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(15,23,42,0.6) 100%); border:1px solid rgba(16,185,129,0.35); border-radius:12px; padding:1rem;">
-                <span style="font-size:0.7rem; color:#10b981; font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">Standard Gross Monthly</span>
+              <div onclick="window.finApp.openQuickSalaryModal('${emp.id}')" style="background:linear-gradient(135deg, rgba(16,185,129,0.14) 0%, rgba(15,23,42,0.6) 100%); border:1px solid rgba(16,185,129,0.45); border-radius:12px; padding:1rem; cursor:pointer; position:relative; transition:all 0.15s ease;" onmouseover="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 15px rgba(16,185,129,0.3)';" onmouseout="this.style.borderColor='rgba(16,185,129,0.45)'; this.style.boxShadow='none';" title="Click to change or adjust total remuneration">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:0.7rem; color:#10b981; font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">Standard Gross Monthly</span>
+                  <span style="font-size:0.65rem; color:#10b981; background:rgba(16,185,129,0.18); border:1px solid rgba(16,185,129,0.35); padding:1px 6px; border-radius:4px; font-weight:700;">✏️ Change</span>
+                </div>
                 <div style="font-size:1.45rem; font-weight:800; color:#10b981; margin-top:3px;">
                   ${this.formatCurrency(standardMonthly)}
                 </div>
+                <div style="font-size:0.68rem; color:#94a3b8;">Total remuneration per cycle</div>
+              </div>
                 <div style="font-size:0.68rem; color:#94a3b8;">Total remuneration per cycle</div>
               </div>
 
@@ -2585,6 +2618,205 @@ export function registerPayrollModules(FinanceApp) {
 
   proto.closeEmployeeProfileModal = function () {
     this.closeCustomModal('fin-emp-profile-modal-backdrop');
+  };
+
+  proto.openQuickSalaryModal = function (empId) {
+    let emp = null;
+    const employees = this.db?.employees || [];
+    if (empId) {
+      const searchKey = String(empId).trim().toLowerCase();
+      emp = employees.find(e =>
+        (e.id && String(e.id).trim().toLowerCase() === searchKey) ||
+        (e.employee_no && String(e.employee_no).trim().toLowerCase() === searchKey)
+      );
+    }
+    if (!emp) emp = employees[0];
+    if (!emp) {
+      alert('Employee record not found.');
+      return;
+    }
+
+    const basic = Number(emp.basic_salary) || 0;
+    const acc = Number(emp.accommodation_allowance) || 0;
+    const oth = Number(emp.other_allowance) || 0;
+    const gross = basic + acc + oth;
+
+    // Remove any existing quick modal
+    const existing = document.getElementById('fin-quick-salary-modal-backdrop');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'fin-quick-salary-modal-backdrop';
+    modal.className = 'fin-modal-backdrop open';
+    modal.style.cssText = 'position:fixed; inset:0; z-index:100050; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.8); backdrop-filter:blur(6px); padding:1rem;';
+
+    modal.innerHTML = `
+      <div class="fin-modal-dialog" style="max-width:540px; width:100%; background:#0d1527; border:1px solid rgba(56,189,248,0.4); border-radius:16px; box-shadow:0 25px 70px rgba(0,0,0,0.9), 0 0 40px rgba(56,189,248,0.2); overflow:hidden; display:flex; flex-direction:column; animation:fadeIn 0.15s ease-out;">
+        <!-- Modal Header -->
+        <div style="background:linear-gradient(180deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%); padding:1.15rem 1.4rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <div style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(56,189,248,0.25) 100%); border:1px solid rgba(16,185,129,0.35); display:flex; align-items:center; justify-content:center; font-size:1.25rem;">💵</div>
+            <div>
+              <h3 style="margin:0; font-size:1.1rem; font-weight:800; color:#f8fafc;">Change Monthly Salary &amp; Allowances</h3>
+              <p style="margin:2px 0 0; font-size:0.74rem; color:#94a3b8;">
+                <strong style="color:#38bdf8;">${escapeHtml(emp.name)}</strong> (${escapeHtml(emp.employee_no || '')}) • ${escapeHtml(emp.position || 'Staff')}
+              </p>
+            </div>
+          </div>
+          <button type="button" class="fin-modal-close" onclick="document.getElementById('fin-quick-salary-modal-backdrop')?.remove()" style="font-size:1.4rem; color:#94a3b8; background:none; border:none; cursor:pointer; line-height:1;">&times;</button>
+        </div>
+
+        <!-- Form Body -->
+        <form id="fin-quick-salary-form" onsubmit="window.finApp.saveQuickSalary(event, '${emp.id}')" style="padding:1.4rem; display:flex; flex-direction:column; gap:1.1rem;">
+          <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:1rem; display:flex; flex-direction:column; gap:0.85rem;">
+            <div class="fin-form-group" style="margin-bottom:0;">
+              <label class="fin-field-label" style="display:flex; justify-content:space-between;">
+                <span>Monthly Basic Salary (${emp.currency || 'AED'}) <span style="color:#ef4444;">*</span></span>
+                <span style="color:#64748b; font-weight:normal; font-size:0.7rem;">Contractual Base</span>
+              </label>
+              <input type="number" step="0.01" id="quick-salary-basic" class="fin-form-input" value="${basic}" required placeholder="0.00" oninput="window.finApp.calcQuickSalaryGross()" style="font-weight:700; font-size:1rem; color:#f8fafc;">
+            </div>
+
+            <div class="fin-form-group" style="margin-bottom:0;">
+              <label class="fin-field-label" style="display:flex; justify-content:space-between;">
+                <span>Accommodation Allowance (${emp.currency || 'AED'})</span>
+                <span style="color:#64748b; font-weight:normal; font-size:0.7rem;">Housing element</span>
+              </label>
+              <input type="number" step="0.01" id="quick-salary-acc" class="fin-form-input" value="${acc}" placeholder="0.00" oninput="window.finApp.calcQuickSalaryGross()" style="font-weight:700; font-size:1rem; color:#38bdf8;">
+            </div>
+
+            <div class="fin-form-group" style="margin-bottom:0;">
+              <label class="fin-field-label" style="display:flex; justify-content:space-between;">
+                <span>Other / Transport / Site Allowance (${emp.currency || 'AED'})</span>
+                <span style="color:#64748b; font-weight:normal; font-size:0.7rem;">Utilities, food, transport</span>
+              </label>
+              <input type="number" step="0.01" id="quick-salary-oth" class="fin-form-input" value="${oth}" placeholder="0.00" oninput="window.finApp.calcQuickSalaryGross()" style="font-weight:700; font-size:1rem; color:#f59e0b;">
+            </div>
+          </div>
+
+          <!-- Live Standard Gross Summary Banner -->
+          <div style="background:linear-gradient(90deg, rgba(16,185,129,0.18) 0%, rgba(56,189,248,0.12) 100%); border:1px solid rgba(16,185,129,0.35); border-radius:10px; padding:0.9rem 1.15rem; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:0.7rem; color:#cbd5e1; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Calculated Monthly Gross Total</div>
+              <div style="font-size:0.72rem; color:#94a3b8;">Sum of Basic + Accommodation + Other Allowances</div>
+            </div>
+            <strong id="quick-salary-gross-preview" style="font-size:1.35rem; font-weight:800; color:#10b981;">
+              ${this.formatCurrency(gross, emp.currency || 'AED')}
+            </strong>
+          </div>
+
+          <!-- Buttons -->
+          <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:0.35rem;">
+            <button type="button" class="fin-btn-secondary" onclick="document.getElementById('fin-quick-salary-modal-backdrop')?.remove()">
+              Cancel
+            </button>
+            <button type="submit" id="quick-salary-save-btn" class="fin-btn-primary" style="background:#10b981; border-color:#10b981; font-weight:700; padding:8px 18px;">
+              💾 Save &amp; Update Salary
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    setTimeout(() => {
+      document.getElementById('quick-salary-basic')?.focus();
+      document.getElementById('quick-salary-basic')?.select();
+    }, 50);
+  };
+
+  proto.calcQuickSalaryGross = function () {
+    const basic = parseFloat(document.getElementById('quick-salary-basic')?.value) || 0;
+    const acc = parseFloat(document.getElementById('quick-salary-acc')?.value) || 0;
+    const oth = parseFloat(document.getElementById('quick-salary-oth')?.value) || 0;
+    const total = basic + acc + oth;
+    const el = document.getElementById('quick-salary-gross-preview');
+    if (el) {
+      el.textContent = (typeof this.formatCurrency === 'function') ? this.formatCurrency(total) : ('AED ' + total.toFixed(2));
+    }
+  };
+
+  proto.saveQuickSalary = async function (e, empId) {
+    if (e && e.preventDefault) e.preventDefault();
+    const btn = document.getElementById('quick-salary-save-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span> Saving...';
+    }
+
+    const searchKey = String(empId).trim().toLowerCase();
+    const emp = (this.db?.employees || []).find(em =>
+      em.id === empId ||
+      em.employee_no === empId ||
+      String(em.id || '').toLowerCase() === searchKey ||
+      String(em.employee_no || '').toLowerCase() === searchKey
+    );
+
+    if (!emp) {
+      alert('Employee record not found.');
+      return;
+    }
+
+    const basic = parseFloat(document.getElementById('quick-salary-basic')?.value) || 0;
+    const acc = parseFloat(document.getElementById('quick-salary-acc')?.value) || 0;
+    const oth = parseFloat(document.getElementById('quick-salary-oth')?.value) || 0;
+
+    emp.basic_salary = basic;
+    emp.accommodation_allowance = acc;
+    emp.other_allowance = oth;
+    emp.consolidated_allowance = 0;
+    emp.updated_at = new Date().toISOString();
+
+    // Cross-sync to employment certificates
+    if (Array.isArray(this.db.employment_certificates)) {
+      this.db.employment_certificates.forEach(c => {
+        if ((c.employee_id && c.employee_id === emp.id) ||
+          (c.employee_name_en && emp.name && (c.employee_name_en.toLowerCase() === emp.name.toLowerCase() || c.employee_name_en.toLowerCase().includes(emp.name.toLowerCase()))) ||
+          (c.passport_no && emp.passport_no && c.passport_no === emp.passport_no)) {
+          c.basic_salary = basic;
+          c.accommodation_allowance = acc;
+          c.total_salary = basic + acc;
+        }
+      });
+    }
+
+    if (typeof this.saveDatabaseToCache === 'function') {
+      this.saveDatabaseToCache();
+    } else {
+      if (typeof this.saveDatabaseToCache === 'function') { this.saveDatabaseToCache(); } else { try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { } }
+    }
+
+    // Close quick modal
+    document.getElementById('fin-quick-salary-modal-backdrop')?.remove();
+
+    if (typeof this.showNotification === 'function') {
+      this.showNotification(`✓ Salary for ${emp.name} updated to ${this.formatCurrency(basic + acc + oth, emp.currency || 'AED')} successfully!`, 'success');
+    } else if (typeof this.showToast === 'function') {
+      this.showToast(`✓ Salary updated successfully!`, 'success');
+    }
+
+    // Re-render Profile Modal immediately if open
+    const profBackdrop = document.getElementById('fin-emp-profile-modal-backdrop');
+    if (profBackdrop) {
+      this.openEmployeeProfileModal(emp.id);
+    }
+
+    // Re-render Directory table if active
+    if (this.activeTab === 'employees') {
+      const root = document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container');
+      if (root) this.renderEmployeesTab(root);
+    }
+
+    // Sync with backend API
+    try {
+      if (typeof this.syncApi === 'function') {
+        await this.syncApi('save_employee', { employee: emp });
+      } else if (typeof this.syncWithBackend === 'function') {
+        await this.syncWithBackend('save_employee', { employee: emp });
+      }
+    } catch (err) {
+      console.warn('Salary backend sync warning:', err);
+    }
   };
 
   proto.printEmployeeProfile = function (empId) {
@@ -3754,9 +3986,11 @@ export function registerPayrollModules(FinanceApp) {
     this.db.payroll_initialized = true;
     this.db.payroll = (this.db.payroll || []).filter(p => p.id !== slipId && p.slip_no !== slipId && (!slip || (p.id !== slip.id && p.slip_no !== slip.slip_no)));
 
-    try {
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (err) { }
+    if (typeof this.saveDatabaseToCache === 'function') {
+      this.saveDatabaseToCache();
+    } else {
+      if (typeof this.saveDatabaseToCache === 'function') { this.saveDatabaseToCache(); } else { try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { } }
+    }
 
     // Sync deletion with backend
     try {
@@ -4075,7 +4309,7 @@ export function registerPayrollModules(FinanceApp) {
             };
             if (!Array.isArray(this.db.payroll)) this.db.payroll = [];
             this.db.payroll.push(slip);
-            try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+            if (typeof this.saveDatabaseToCache === 'function') { this.saveDatabaseToCache(); } else { try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { } }
           }
         }
       }
@@ -5191,7 +5425,7 @@ export function registerPayrollModules(FinanceApp) {
     if (!cert) cert = (this.db?.employment_certificates || [])[0];
     if (cert) {
       cert.salary_option = (cert.salary_option === 'without_salary') ? 'with_salary' : 'without_salary';
-      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+      if (typeof this.saveDatabaseToCache === 'function') { this.saveDatabaseToCache(); } else { try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { } }
       this.openEmploymentCertificatePrintModal(cert.id);
       this.showNotification(cert.salary_option === 'without_salary' ? 'Switched to: Certificate WITHOUT Salary (Service Only)' : 'Switched to: Certificate WITH Salary Breakdown', 'info');
     }
@@ -5605,7 +5839,7 @@ export function registerPayrollModules(FinanceApp) {
       this.db.employees.unshift(syncedEmp);
     }
 
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+    if (typeof this.saveDatabaseToCache === 'function') { this.saveDatabaseToCache(); } else { try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { } }
     this.closeModal('modal-emp-cert-edit');
     this.showNotification(`Employment Certificate ${updated.ref_no} & Employee Directory saved successfully.`, 'success');
     this.openEmploymentCertificatePrintModal(updated.id);
@@ -5623,7 +5857,7 @@ export function registerPayrollModules(FinanceApp) {
     if (this.db.employment_certificates) {
       this.db.employment_certificates = this.db.employment_certificates.filter(c => c.id !== certId && c.ref_no !== certId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+    if (typeof this.saveDatabaseToCache === 'function') { this.saveDatabaseToCache(); } else { try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { } }
     this.renderActiveTab();
     this.showNotification(`Certificate ${label} deleted.`, 'info');
     await this.syncApi('delete_employment_certificate', { id: certId });
@@ -6482,7 +6716,7 @@ export function registerPayrollModules(FinanceApp) {
       this.db.employees.push(syncedEmp);
     }
 
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+    if (typeof this.saveDatabaseToCache === 'function') { this.saveDatabaseToCache(); } else { try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { } }
     this.closeModal('modal-loa-edit');
     this.showNotification(`Letter of Assignment ${updated.ref_no} & Employee Directory saved.`, 'success');
     this.openLetterOfAssignmentPrintModal(updated.id);
@@ -6500,7 +6734,7 @@ export function registerPayrollModules(FinanceApp) {
     if (this.db.letters_of_assignment) {
       this.db.letters_of_assignment = this.db.letters_of_assignment.filter(l => l.id !== loaId && l.ref_no !== loaId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+    if (typeof this.saveDatabaseToCache === 'function') { this.saveDatabaseToCache(); } else { try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { } }
     this.renderActiveTab();
     this.showNotification(`Letter ${label} deleted.`, 'info');
     await this.syncApi('delete_letter_of_assignment', { id: loaId });
