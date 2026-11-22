@@ -206,25 +206,19 @@ export function registerPayrollModules(FinanceApp) {
     } else {
       this.db.employees_initialized = true;
 
-      // Ensure Nadeem Akhtar Nazmul Hoda is recognized as EN12001 with accurate resigned status and exit date
-      let nadeem = this.db.employees.find(e => e.id === 'emp-mwlpkkbr' || e.id === 'emp-en12001' || (e.name && e.name.toLowerCase().includes('nadeem')));
+      // Ensure Nadeem Akhtar Nazmul Hoda is recognized as EN12001
+      let nadeem = this.db.employees.find(e => e.id === 'emp-mwlpkkbr' || (e.name && e.name.toLowerCase().includes('nadeem')));
       if (nadeem) {
-        nadeem.id = 'emp-en12001';
-        nadeem.employee_no = 'EN12001';
+        nadeem.employee_no = nadeem.employee_no || 'EN12001';
         nadeem.name = nadeem.name || 'Nadeem Akhtar Nazmul Hoda';
         nadeem.name_ar = nadeem.name_ar || 'نديم اختر نظم هدي';
         nadeem.position = nadeem.position || 'Civil Engineer';
         nadeem.position_ar = nadeem.position_ar || 'مهندس مدني';
         nadeem.passport_no = nadeem.passport_no || 'U3566719';
         nadeem.emirates_id = nadeem.emirates_id || '784-1998-3368120-0';
-        nadeem.phone = nadeem.phone || '+971565786874';
+        nadeem.phone = nadeem.phone || '+971 555411543';
         nadeem.email = nadeem.email || 'nadeem.hmsit@gmail.com';
         nadeem.company_id = nadeem.company_id || this.activeCompanyId || 'rayan-corp-uae';
-        nadeem.status = nadeem.status || 'Resigned';
-        if (!nadeem.end_date) nadeem.end_date = '2025-02-26';
-        if (!nadeem.resignation_date) nadeem.resignation_date = '2025-02-26';
-        if (!nadeem.date_of_leaving) nadeem.date_of_leaving = '2025-02-26';
-        if (!nadeem.end_reason) nadeem.end_reason = 'Personal Reason';
       }
 
       // Bakhteyar Alam Mokhtar Ahmad EN12009
@@ -309,27 +303,6 @@ export function registerPayrollModules(FinanceApp) {
           if (e.name && e.name.toLowerCase().includes('shafiur')) {
             e.id = 'emp-en12004';
             e.employee_no = 'EN12004';
-          }
-          // Ensure all resigned and terminated staff have their authoritative exit date and reason
-          const knownExits = {
-            'EN12001': { end_date: '2025-02-26', status: 'Resigned', reason: 'Personal Reason', rehire: 'yes' },
-            'EN12002': { end_date: '2025-08-01', status: 'Resigned', reason: 'Personal / Relocated', rehire: 'yes' },
-            'EN12003': { end_date: '2025-07-25', status: 'Resigned', reason: 'Personal Reason', rehire: 'yes' },
-            'EN12004': { end_date: '2024-10-20', status: 'Terminated', reason: 'Employee takes leave and does not return to work', rehire: 'no' },
-            'EN12005': { end_date: '2024-10-21', status: 'Terminated', reason: 'Absconding / did not return after leave', rehire: 'no' }
-          };
-          const exitInfo = knownExits[(e.employee_no || '').toUpperCase()];
-          if (exitInfo) {
-            if (!e.end_date && !e.resignation_date) {
-              e.end_date = exitInfo.end_date;
-              e.resignation_date = exitInfo.end_date;
-              e.date_of_leaving = exitInfo.end_date;
-            }
-            if (!e.status || e.status === 'Active') {
-              e.status = exitInfo.status;
-            }
-            if (!e.end_reason) e.end_reason = exitInfo.reason;
-            if (!e.eligible_for_rehire) e.eligible_for_rehire = exitInfo.rehire;
           }
         });
         // Deduplicate to avoid collisions
@@ -420,7 +393,7 @@ export function registerPayrollModules(FinanceApp) {
       if (typeof localStorage !== 'undefined') {
         deletedSlips.push(...JSON.parse(localStorage.getItem('rayan_fin_deleted_payroll_ids') || '[]'));
       }
-    } catch (e) {}
+    } catch (e) { }
     if (Array.isArray(this.db.deleted_payroll_ids)) {
       deletedSlips.push(...this.db.deleted_payroll_ids);
     }
@@ -775,9 +748,9 @@ export function registerPayrollModules(FinanceApp) {
             <span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.7rem; font-weight:700; color:${statusColor}; background:${statusBg}; border:1px solid ${statusBorder};">
               ${escapeHtml(statusLabel)}
             </span>
-            ${(isResigned || isTerminated) ? `
-              <div style="font-size:0.68rem; color:${statusColor}; margin-top:3px; font-weight:700; font-family:monospace;" title="${isTerminated ? 'Termination date' : 'Resignation / Last working day'}">
-                📅 ${isTerminated ? 'Terminated:' : 'Left:'} ${escapeHtml(emp.end_date || emp.resignation_date || emp.date_of_leaving || '---')}
+            ${((isResigned || isTerminated) && (emp.end_date || emp.resignation_date)) ? `
+              <div style="font-size:0.65rem; color:${statusColor}; margin-top:2px; font-family:monospace;" title="${isTerminated ? 'Termination date' : 'Resignation / Last working day'}">
+                ${isTerminated ? 'Terminated:' : 'Left:'} ${escapeHtml(emp.end_date || emp.resignation_date)}
               </div>
             ` : ''}
             <!-- Rehire Eligibility Badge ONLY for former/inactive employees (NOT for active employees) -->
@@ -1333,7 +1306,7 @@ export function registerPayrollModules(FinanceApp) {
     let emp = null;
     if (empId) {
       const searchKey = String(empId).trim().toLowerCase();
-      emp = (this.db?.employees || []).find(e => 
+      emp = (this.db?.employees || []).find(e =>
         (e.id && String(e.id).trim().toLowerCase() === searchKey) ||
         (e.employee_no && String(e.employee_no).trim().toLowerCase() === searchKey)
       );
@@ -1359,25 +1332,6 @@ export function registerPayrollModules(FinanceApp) {
     const basicSalary = emp ? Number(emp.basic_salary || 0) : '0.00';
     const accAllowance = emp ? Number(emp.accommodation_allowance || 0) : '';
     const otherAllowance = emp ? Number(emp.other_allowance || 0) : '';
-
-    // Normalize End Date to YYYY-MM-DD for standard date input
-    let endDateYMD = emp?.end_date || emp?.resignation_date || emp?.date_of_leaving || '';
-    if (endDateYMD && endDateYMD.includes('/')) {
-      const parts = endDateYMD.split('/');
-      if (parts.length === 3 && parts[2].length === 4) {
-        endDateYMD = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-      }
-    }
-    if (!endDateYMD && (emp?.status === 'Resigned' || emp?.status === 'Terminated')) {
-      const knownExits = {
-        'EN12001': '2025-02-26',
-        'EN12002': '2025-08-01',
-        'EN12003': '2025-07-25',
-        'EN12004': '2024-10-20',
-        'EN12005': '2024-10-21'
-      };
-      endDateYMD = knownExits[(emp?.employee_no || '').toUpperCase()] || '';
-    }
 
     const hasPhoto = Boolean(emp?.photo);
 
@@ -1657,7 +1611,7 @@ export function registerPayrollModules(FinanceApp) {
                 <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                   <div class="fin-form-group" style="margin-bottom:0;">
                     <label class="fin-field-label" style="color:#fca5a5;">End Date / Last Working Day <span style="color:#ef4444;">*</span></label>
-                    <input type="date" name="end_date" id="fin-emp-end-date" class="fin-form-input" value="${endDateYMD}" style="border-color:rgba(239,68,68,0.45); font-weight:700;">
+                    <input type="date" name="end_date" id="fin-emp-end-date" class="fin-form-input" value="${emp?.end_date || emp?.resignation_date || ''}" style="border-color:rgba(239,68,68,0.45); font-weight:700;">
                     <span style="font-size:0.68rem; color:#94a3b8;">Effective date of resignation / departure</span>
                   </div>
                   <div class="fin-form-group" style="margin-bottom:0;">
@@ -1879,7 +1833,7 @@ export function registerPayrollModules(FinanceApp) {
         });
         localStorage.setItem('rayan_fin_deleted_employee_ids', JSON.stringify(updatedStored));
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // If saving Bakhteyar, ensure id is emp-en12009 and employee_no is EN12009 if left as EN12004
     if ((empObj.name || '').toLowerCase().includes('bakhteyar')) {
@@ -1924,9 +1878,9 @@ export function registerPayrollModules(FinanceApp) {
     // Cross-sync Employment Certificates and LOA
     if (Array.isArray(this.db.employment_certificates)) {
       this.db.employment_certificates.forEach(c => {
-        if ((c.employee_id && c.employee_id === empObj.id) || 
-            (c.employee_name_en && empObj.name && (c.employee_name_en.toLowerCase() === empObj.name.toLowerCase() || c.employee_name_en.toLowerCase().includes(empObj.name.toLowerCase()))) ||
-            (c.passport_no && empObj.passport_no && c.passport_no === empObj.passport_no)) {
+        if ((c.employee_id && c.employee_id === empObj.id) ||
+          (c.employee_name_en && empObj.name && (c.employee_name_en.toLowerCase() === empObj.name.toLowerCase() || c.employee_name_en.toLowerCase().includes(empObj.name.toLowerCase()))) ||
+          (c.passport_no && empObj.passport_no && c.passport_no === empObj.passport_no)) {
           c.employee_name_en = empObj.name;
           c.job_title_en = empObj.position;
           c.basic_salary = empObj.basic_salary;
@@ -1936,7 +1890,7 @@ export function registerPayrollModules(FinanceApp) {
       });
     }
 
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
 
     this.closeEmployeeModal();
 
@@ -1973,7 +1927,7 @@ export function registerPayrollModules(FinanceApp) {
 
   proto.deleteEmployee = async function (empId) {
     const searchKey = String(empId).trim().toLowerCase();
-    const emp = (this.db?.employees || []).find(e => 
+    const emp = (this.db?.employees || []).find(e =>
       (e.id && String(e.id).trim().toLowerCase() === searchKey) ||
       (e.employee_no && String(e.employee_no).trim().toLowerCase() === searchKey)
     );
@@ -2003,14 +1957,14 @@ export function registerPayrollModules(FinanceApp) {
         if (noKey && !stored.includes(noKey)) stored.push(noKey);
         localStorage.setItem('rayan_fin_deleted_employee_ids', JSON.stringify(stored));
       }
-    } catch (e) {}
+    } catch (e) { }
 
     this.db.employees = (this.db.employees || []).filter(e => {
       const eId = String(e.id || '').trim().toLowerCase();
       const eNo = String(e.employee_no || '').trim().toLowerCase();
       return eId !== idKey && eNo !== noKey;
     });
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
 
     // Sync deletion with backend
     try {
@@ -2054,8 +2008,8 @@ export function registerPayrollModules(FinanceApp) {
     const employees = this.db?.employees || [];
     if (empId) {
       const searchKey = String(empId).trim().toLowerCase();
-      emp = employees.find(e => 
-        e.id === empId || 
+      emp = employees.find(e =>
+        e.id === empId ||
         e.employee_no === empId ||
         String(e.id || '').toLowerCase() === searchKey ||
         String(e.employee_no || '').toLowerCase() === searchKey ||
@@ -2075,33 +2029,11 @@ export function registerPayrollModules(FinanceApp) {
       return;
     }
 
-    // Ensure all resigned and terminated staff have authoritative exit date and reason
-    const knownExits = {
-      'EN12001': { end_date: '2025-02-26', status: 'Resigned', reason: 'Personal Reason', rehire: 'yes' },
-      'EN12002': { end_date: '2025-08-01', status: 'Resigned', reason: 'Personal / Relocated', rehire: 'yes' },
-      'EN12003': { end_date: '2025-07-25', status: 'Resigned', reason: 'Personal Reason', rehire: 'yes' },
-      'EN12004': { end_date: '2024-10-20', status: 'Terminated', reason: 'Employee takes leave and does not return to work', rehire: 'no' },
-      'EN12005': { end_date: '2024-10-21', status: 'Terminated', reason: 'Absconding / did not return after leave', rehire: 'no' }
-    };
-    const exitFallback = knownExits[(emp.employee_no || '').toUpperCase()];
-    if (exitFallback) {
-      if (!emp.end_date && !emp.resignation_date) {
-        emp.end_date = exitFallback.end_date;
-        emp.resignation_date = exitFallback.end_date;
-        emp.date_of_leaving = exitFallback.end_date;
-      }
-      if (!emp.status || emp.status === 'Active') {
-        emp.status = exitFallback.status;
-      }
-      if (!emp.end_reason) emp.end_reason = exitFallback.reason;
-      if (!emp.eligible_for_rehire) emp.eligible_for_rehire = exitFallback.rehire;
-    }
-
     // Calculate all recorded salary payouts from payroll table
     const allSlips = (this.db?.payroll || []).filter(p => {
-      return p.employee_id === emp.id || 
-             (emp.employee_no && p.employee_no === emp.employee_no) ||
-             (emp.name && p.employee_name && p.employee_name.toLowerCase().trim() === emp.name.toLowerCase().trim());
+      return p.employee_id === emp.id ||
+        (emp.employee_no && p.employee_no === emp.employee_no) ||
+        (emp.name && p.employee_name && p.employee_name.toLowerCase().trim() === emp.name.toLowerCase().trim());
     });
     allSlips.sort((a, b) => new Date(b.payment_date || b.created_at || '1970-01-01') - new Date(a.payment_date || a.created_at || '1970-01-01'));
 
@@ -2207,7 +2139,7 @@ export function registerPayrollModules(FinanceApp) {
                   </span>
                   <!-- Distinct Status Badge (Amber for Resigned, Red for Terminated, Green for Active) -->
                   <span style="font-size:0.72rem; padding:2px 9px; border-radius:12px; background:${statusBg}; color:${statusColor}; font-weight:800; border:1px solid ${statusBorder};">
-                    ${escapeHtml(statusLabel)}${((isResigned || isTerminated) && (emp.end_date || emp.resignation_date)) ? ` • ${isTerminated ? 'Terminated' : 'Relieved / Left'}: ${escapeHtml(emp.end_date || emp.resignation_date)}` : ''}
+                    ${escapeHtml(statusLabel)}${((isResigned || isTerminated) && (emp.end_date || emp.resignation_date)) ? ` • ${isTerminated ? 'Terminated' : 'Relieved'}: ${escapeHtml(emp.end_date || emp.resignation_date)}` : ''}
                   </span>
                   <span style="font-size:0.72rem; padding:2px 8px; border-radius:6px; background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1);">
                     ${(emp.gender || '').toLowerCase() === 'female' ? '👩 Female' : '👨 Male'}
@@ -2364,7 +2296,7 @@ export function registerPayrollModules(FinanceApp) {
                 </div>
                 <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:0.6rem; margin-top:0.75rem; font-size:0.75rem; color:#94a3b8; display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px;">
                   <span>Joined: <strong style="color:#cbd5e1;">${escapeHtml(emp.date_of_joining || '---')}</strong></span>
-                  ${(emp.end_date || emp.resignation_date) ? `<span>${emp.status === 'Terminated' ? 'Termination Date' : 'End / Resignation Date'}: <strong style="color:#ef4444; font-weight:800;">${escapeHtml(emp.end_date || emp.resignation_date)}</strong></span>` : ''}
+                  ${(emp.end_date || emp.resignation_date) ? `<span>End Date: <strong style="color:#ef4444;">${escapeHtml(emp.end_date || emp.resignation_date)}</strong></span>` : ''}
                   <span>Tenure: <strong style="color:${(emp.end_date || emp.resignation_date) ? '#f87171' : '#10b981'};">${tenureStr}</strong></span>
                 </div>
                 ${(emp.end_reason || emp.resignation_reason) ? `
@@ -2534,18 +2466,18 @@ export function registerPayrollModules(FinanceApp) {
                         </td>
                       </tr>
                     ` : allSlips.map((slip, idx) => {
-                      const sBasic = Number(slip.basic_salary) || 0;
-                      const sAcc = Number(slip.accommodation_allowance) || 0;
-                      const sCons = Number(slip.consolidated_allowance) || 0;
-                      const sOt = Number(slip.normal_overtime) || 0;
-                      const sAllow = sAcc + sCons + sOt;
-                      const sDed = Number(slip.total_deductions) || 0;
-                      const sNet = Number(slip.net_pay) || Number(slip.total_earnings) || 0;
-                      const isPaid = (slip.status || 'Paid').toLowerCase() === 'paid';
-                      const pStatusColor = isPaid ? '#10b981' : '#f59e0b';
-                      const pStatusBg = isPaid ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)';
+      const sBasic = Number(slip.basic_salary) || 0;
+      const sAcc = Number(slip.accommodation_allowance) || 0;
+      const sCons = Number(slip.consolidated_allowance) || 0;
+      const sOt = Number(slip.normal_overtime) || 0;
+      const sAllow = sAcc + sCons + sOt;
+      const sDed = Number(slip.total_deductions) || 0;
+      const sNet = Number(slip.net_pay) || Number(slip.total_earnings) || 0;
+      const isPaid = (slip.status || 'Paid').toLowerCase() === 'paid';
+      const pStatusColor = isPaid ? '#10b981' : '#f59e0b';
+      const pStatusBg = isPaid ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)';
 
-                      return `
+      return `
                         <tr style="border-bottom:1px solid rgba(255,255,255,0.05); transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
                           <td style="padding:8px 10px; color:#64748b; font-size:0.75rem;">${idx + 1}</td>
                           <td style="padding:8px 10px; font-weight:700; color:#f8fafc;">
@@ -2598,7 +2530,7 @@ export function registerPayrollModules(FinanceApp) {
                           </td>
                         </tr>
                       `;
-                    }).join('')}
+    }).join('')}
                   </tbody>
                   ${allSlips.length > 0 ? `
                     <tfoot>
@@ -2660,9 +2592,9 @@ export function registerPayrollModules(FinanceApp) {
     if (!emp) return;
 
     const allSlips = (this.db?.payroll || []).filter(p => {
-      return p.employee_id === emp.id || 
-             (emp.employee_no && p.employee_no === emp.employee_no) ||
-             (emp.name && p.employee_name && p.employee_name.toLowerCase().trim() === emp.name.toLowerCase().trim());
+      return p.employee_id === emp.id ||
+        (emp.employee_no && p.employee_no === emp.employee_no) ||
+        (emp.name && p.employee_name && p.employee_name.toLowerCase().trim() === emp.name.toLowerCase().trim());
     });
     allSlips.sort((a, b) => new Date(b.payment_date || b.created_at || '1970-01-01') - new Date(a.payment_date || a.created_at || '1970-01-01'));
 
@@ -2672,28 +2604,6 @@ export function registerPayrollModules(FinanceApp) {
     const totalStandard = basic + acc + oth;
     const lifetimePaid = allSlips.filter(p => (p.status || '').toLowerCase() === 'paid')
       .reduce((sum, p) => sum + (Number(p.net_pay) || Number(p.total_earnings) || 0), 0);
-
-    const isExit = (emp.status === 'Resigned' || emp.status === 'Terminated');
-    let rawExitDate = emp.end_date || emp.resignation_date || emp.date_of_leaving || emp.exit_date || '';
-    if (!rawExitDate && isExit) {
-      const knownExits = {
-        'EN12001': '2025-02-26',
-        'EN12002': '2025-08-01',
-        'EN12003': '2025-07-25',
-        'EN12004': '2024-10-20',
-        'EN12005': '2024-10-21'
-      };
-      rawExitDate = knownExits[(emp.employee_no || '').toUpperCase()] || '';
-    }
-    let exitDateDisplay = rawExitDate;
-    if (rawExitDate) {
-      try {
-        const parts = rawExitDate.split('-');
-        if (parts.length === 3 && parts[0].length === 4) {
-          exitDateDisplay = `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-      } catch (e) {}
-    }
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
@@ -2746,12 +2656,9 @@ export function registerPayrollModules(FinanceApp) {
           </div>
           <div style="flex: 1;">
             <div style="font-size: 13pt; font-weight: 800; color: #0f172a;">${escapeHtml(emp.name)} ${emp.name_ar ? `(${escapeHtml(emp.name_ar)})` : ''}</div>
-            <div style="font-size: 9.5pt; font-weight: 700; color: #0284c7; margin: 2px 0;">${escapeHtml(emp.position || emp.designation || 'Staff')} • ${escapeHtml(emp.department || 'Rayan Engineering')}</div>
+            <div style="font-size: 9.5pt; font-weight: 700; color: #0284c7; margin: 2px 0;">${escapeHtml(emp.position || emp.designation || 'Staff')} • ${escapeHtml(emp.department || 'Rayan')}</div>
             <div style="font-size: 8pt; color: #475569;">
-              Status: <strong style="color:${(emp.status === 'Resigned' ? '#b45309' : (emp.status === 'Terminated' ? '#dc2626' : '#15803d'))};">${escapeHtml(emp.status || 'Active')}</strong>
-              • Joining Date: <strong>${escapeHtml(emp.date_of_joining || '---')}</strong>
-              ${isExit ? `• <span style="color:#dc2626; font-weight:800;">${emp.status === 'Terminated' ? 'Termination Date' : 'Resignation / End Date'}: <u>${escapeHtml(exitDateDisplay || '---')}</u></span>` : ''}
-              • Project: <strong>${escapeHtml(emp.project_name || 'Corporate Overhead')}</strong>
+              Status: <strong>${escapeHtml(emp.status || 'Active')}</strong> • Joining Date: <strong>${escapeHtml(emp.date_of_joining || '---')}</strong> • Project: <strong>${escapeHtml(emp.project_name || 'Corporate Overhead')}</strong>
             </div>
           </div>
         </div>
@@ -2798,29 +2705,30 @@ export function registerPayrollModules(FinanceApp) {
           <tr>
             <th>Labor Card No.</th>
             <td style="font-family:monospace;">${escapeHtml(emp.labor_card_no || '---')}</td>
+            <th>Payment Channel</th>
+            <td>${escapeHtml(emp.default_pay_method || 'Bank Transfer')}</td>
+          </tr>
+          <tr>
+            <th>Payment Channel</th>
+            <td>${escapeHtml(emp.default_pay_method || 'Bank Transfer')}</td>
             <th>Bank Name</th>
             <td>${escapeHtml(emp.bank_name || 'Cash / On-Hand')}</td>
           </tr>
           <tr>
-            <th>Payment Channel</th>
-            <td style="font-weight:600;">${escapeHtml(emp.default_pay_method || 'Bank Transfer')}</td>
             <th>IBAN / Account</th>
-            <td style="font-family:monospace; font-weight:600;" colspan="${isExit ? '1' : '1'}">${escapeHtml(emp.iban || emp.account_no || '---')}</td>
-          </tr>
-          ${isExit ? `
-          <tr>
-            <th style="color:#dc2626; background:#fef2f2;">Exit / Departure Date</th>
-            <td style="font-weight:800; color:#dc2626; font-size:9.5pt; background:#fff1f2;">${escapeHtml(exitDateDisplay || '---')}</td>
+            <td style="font-family:monospace; font-weight:600;" colspan="${(emp.status === 'Resigned' || emp.status === 'Terminated') ? '1' : '3'}">${escapeHtml(emp.iban || emp.account_no || '---')}</td>
+            ${(emp.status === 'Resigned' || emp.status === 'Terminated') ? `
             <th>Rehire Eligibility</th>
             <td style="font-weight:700; color:${emp.eligible_for_rehire === 'no' || emp.eligible_for_rehire === false ? '#dc2626' : '#16a34a'};">
               ${emp.eligible_for_rehire === 'no' || emp.eligible_for_rehire === false ? '⛔ INELIGIBLE (Do Not Rehire)' : '✅ ELIGIBLE FOR REHIRE (Approved)'}
-            </td>
+            </td>` : ''}
           </tr>
+          ${(emp.status === 'Resigned' || emp.status === 'Terminated') ? `
           <tr>
-            <th>Reason for Leaving</th>
-            <td style="color:#334155;">${escapeHtml(emp.end_reason || emp.resignation_reason || 'Personal Reason')}</td>
+            <th>Exit / Departure Date</th>
+            <td style="font-weight:700; color:#dc2626;">${escapeHtml(emp.end_date || emp.resignation_date || '---')}</td>
             <th>Exit / Rehire Remarks</th>
-            <td>${escapeHtml(emp.rehire_notes || 'Clearance on file in accordance with corporate HR policy')}</td>
+            <td>${escapeHtml(emp.rehire_notes || emp.end_reason || 'Clearance on file in accordance with corporate HR policy')}</td>
           </tr>` : ''}
         </table>
 
@@ -3841,14 +3749,14 @@ export function registerPayrollModules(FinanceApp) {
         if (slipNo && !stored.includes(slipNo)) stored.push(slipNo);
         localStorage.setItem('rayan_fin_deleted_payroll_ids', JSON.stringify(stored));
       }
-    } catch (e) {}
+    } catch (e) { }
 
     this.db.payroll_initialized = true;
     this.db.payroll = (this.db.payroll || []).filter(p => p.id !== slipId && p.slip_no !== slipId && (!slip || (p.id !== slip.id && p.slip_no !== slip.slip_no)));
 
     try {
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (err) {}
+    } catch (err) { }
 
     // Sync deletion with backend
     try {
@@ -3943,7 +3851,7 @@ export function registerPayrollModules(FinanceApp) {
               </div>
               <div>
                 <label class="fin-form-label">Transaction / Cheque Ref</label>
-                <input type="text" name="payout_reference" class="fin-form-input" value="TXN-PAYROLL-${new Date().toISOString().slice(0,10).replace(/-/g,'')}">
+                <input type="text" name="payout_reference" class="fin-form-input" value="TXN-PAYROLL-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}">
               </div>
             </div>
 
@@ -4167,7 +4075,7 @@ export function registerPayrollModules(FinanceApp) {
             };
             if (!Array.isArray(this.db.payroll)) this.db.payroll = [];
             this.db.payroll.push(slip);
-            try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+            try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
           }
         }
       }
@@ -4321,17 +4229,17 @@ export function registerPayrollModules(FinanceApp) {
                   Employee Information (بيانات الموظف)
                 </div>
                 <div style="display:flex; align-items:stretch;">
-                  ${(function() {
-                    const matchedEmp = (allSlips && slip.employee_id) ? (window.finApp?.db?.employees || []).find(e => e.id === slip.employee_id || e.employee_no === slip.employee_no) : null;
-                    if (matchedEmp && matchedEmp.photo) {
-                      return `
+                  ${(function () {
+        const matchedEmp = (allSlips && slip.employee_id) ? (window.finApp?.db?.employees || []).find(e => e.id === slip.employee_id || e.employee_no === slip.employee_no) : null;
+        if (matchedEmp && matchedEmp.photo) {
+          return `
                         <div style="padding:6px; background:#f8fafc; border-right:1px solid #cbd5e1; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                           <img src="${matchedEmp.photo}" alt="Staff Photo" style="width:58px; height:68px; object-fit:cover; border-radius:4px; border:1px solid #cbd5e1; box-shadow:0 1px 4px rgba(0,0,0,0.1);">
                         </div>
                       `;
-                    }
-                    return '';
-                  })()}
+        }
+        return '';
+      })()}
                 <table style="width:100%; border-collapse:collapse; font-size:0.72rem; text-align:left;">
                   <tbody>
                     <tr style="border-bottom:1px solid #e2e8f0;">
@@ -5098,7 +5006,7 @@ export function registerPayrollModules(FinanceApp) {
                 ${isWithoutSalary ? `
                   <div style="color:#334155; margin-top:1px;"><strong>Employment Status:</strong> <span style="color:${((cert.employment_status || '').toLowerCase() === 'resigned' || (cert.employment_status || '').toLowerCase() === 'terminated') ? '#ef4444' : '#15803d'}; font-weight:700;" contenteditable="true" spellcheck="false">${((cert.employment_status || '').toLowerCase() === 'resigned' || (cert.employment_status || '').toLowerCase() === 'terminated') ? 'Resigned / Relieved' : 'Active / Currently On-Duty'}</span></div>
                 ` : `
-                  <div style="color:#334155; margin-top:1px;"><strong>Monthly Salary:</strong> <span style="font-weight:700; color:#0f172a;" contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} AED</span></div>
+                  <div style="color:#334155; margin-top:1px;"><strong>Monthly Salary:</strong> <span style="font-weight:700; color:#0f172a;" contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED</span></div>
                 `}
               </div>
 
@@ -5121,7 +5029,7 @@ export function registerPayrollModules(FinanceApp) {
                 ${isWithoutSalary ? `
                   <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem; margin-top:1px;"><strong>الحالة الوظيفية:</strong> <span style="color:${((cert.employment_status || '').toLowerCase() === 'resigned' || (cert.employment_status || '').toLowerCase() === 'terminated') ? '#ef4444' : '#15803d'}; font-weight:700;" contenteditable="true" spellcheck="false">${((cert.employment_status || '').toLowerCase() === 'resigned' || (cert.employment_status || '').toLowerCase() === 'terminated') ? 'مستقيل / انتهت خدمته' : 'على رأس عمله (نشط)'}</span></div>
                 ` : `
-                  <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem; margin-top:1px;"><strong>الراتب الشهري:</strong> <span style="font-weight:700; color:#0f172a;" contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} درهم</span></div>
+                  <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem; margin-top:1px;"><strong>الراتب الشهري:</strong> <span style="font-weight:700; color:#0f172a;" contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} درهم</span></div>
                 `}
               </div>
             </div>
@@ -5169,7 +5077,7 @@ export function registerPayrollModules(FinanceApp) {
                       <div style="font-size:0.60rem; color:#64748b;">Fixed primary contractual salary</div>
                     </td>
                     <td style="padding:3px 6px; text-align:center; color:#475569; border-right:1px solid #e2e8f0;">Monthly / شهري</td>
-                    <td style="padding:3px 8px; text-align:right; font-weight:700; color:#0f172a; font-family:monospace;" contenteditable="true" spellcheck="false">${basicVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                    <td style="padding:3px 8px; text-align:right; font-weight:700; color:#0f172a; font-family:monospace;" contenteditable="true" spellcheck="false">${basicVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                   <tr style="border-bottom:1px solid #e2e8f0; background:#f8fafc;">
                     <td style="padding:3px 6px; text-align:center; color:#64748b; font-weight:700; border-right:1px solid #e2e8f0;">2</td>
@@ -5178,7 +5086,7 @@ export function registerPayrollModules(FinanceApp) {
                       <div style="font-size:0.60rem; color:#64748b;">Company provided accommodation allowance</div>
                     </td>
                     <td style="padding:3px 6px; text-align:center; color:#475569; border-right:1px solid #e2e8f0;">Monthly / شهري</td>
-                    <td style="padding:3px 8px; text-align:right; font-weight:700; color:#0f172a; font-family:monospace;" contenteditable="true" spellcheck="false">${accVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                    <td style="padding:3px 8px; text-align:right; font-weight:700; color:#0f172a; font-family:monospace;" contenteditable="true" spellcheck="false">${accVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                   <tr style="background:#e0f2fe; border-top:1.5px solid #0284c7; font-weight:800;">
                     <td colspan="2" style="padding:4px 6px; color:#0369a1; border-right:1px solid #bae6fd;">
@@ -5186,7 +5094,7 @@ export function registerPayrollModules(FinanceApp) {
                       <span style="font-family:'Amiri', serif; font-size:0.74rem;">(إجمالي الراتب الشهري)</span>
                     </td>
                     <td style="padding:4px 6px; text-align:center; color:#0369a1; border-right:1px solid #bae6fd;">AED DIRHAM</td>
-                    <td style="padding:4px 8px; text-align:right; color:#0369a1; font-size:0.80rem; font-family:monospace;" contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} ${curr}</td>
+                    <td style="padding:4px 8px; text-align:right; color:#0369a1; font-size:0.80rem; font-family:monospace;" contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${curr}</td>
                   </tr>
                 </tbody>
               </table>
@@ -5283,7 +5191,7 @@ export function registerPayrollModules(FinanceApp) {
     if (!cert) cert = (this.db?.employment_certificates || [])[0];
     if (cert) {
       cert.salary_option = (cert.salary_option === 'without_salary') ? 'with_salary' : 'without_salary';
-      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
       this.openEmploymentCertificatePrintModal(cert.id);
       this.showNotification(cert.salary_option === 'without_salary' ? 'Switched to: Certificate WITHOUT Salary (Service Only)' : 'Switched to: Certificate WITH Salary Breakdown', 'info');
     }
@@ -5646,7 +5554,7 @@ export function registerPayrollModules(FinanceApp) {
     let empIdx = this.db.employees.findIndex(em => {
       const emName = (em.name || '').toLowerCase().trim();
       return (updated.passport_no && em.passport_no === updated.passport_no) ||
-             (emName && normName && (emName === normName || emName.includes(normName) || normName.includes(emName)));
+        (emName && normName && (emName === normName || emName.includes(normName) || normName.includes(emName)));
     });
 
     let syncedEmp = null;
@@ -5697,7 +5605,7 @@ export function registerPayrollModules(FinanceApp) {
       this.db.employees.unshift(syncedEmp);
     }
 
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
     this.closeModal('modal-emp-cert-edit');
     this.showNotification(`Employment Certificate ${updated.ref_no} & Employee Directory saved successfully.`, 'success');
     this.openEmploymentCertificatePrintModal(updated.id);
@@ -5715,7 +5623,7 @@ export function registerPayrollModules(FinanceApp) {
     if (this.db.employment_certificates) {
       this.db.employment_certificates = this.db.employment_certificates.filter(c => c.id !== certId && c.ref_no !== certId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
     this.renderActiveTab();
     this.showNotification(`Certificate ${label} deleted.`, 'info');
     await this.syncApi('delete_employment_certificate', { id: certId });
@@ -6531,7 +6439,7 @@ export function registerPayrollModules(FinanceApp) {
     let empIdx = this.db.employees.findIndex(em => {
       const emName = (em.name || '').toLowerCase().trim();
       return (updated.passport_no && em.passport_no === updated.passport_no) ||
-             (emName && normName && (emName === normName || emName.includes(normName) || normName.includes(emName)));
+        (emName && normName && (emName === normName || emName.includes(normName) || normName.includes(emName)));
     });
 
     let syncedEmp = null;
@@ -6574,7 +6482,7 @@ export function registerPayrollModules(FinanceApp) {
       this.db.employees.push(syncedEmp);
     }
 
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
     this.closeModal('modal-loa-edit');
     this.showNotification(`Letter of Assignment ${updated.ref_no} & Employee Directory saved.`, 'success');
     this.openLetterOfAssignmentPrintModal(updated.id);
@@ -6592,7 +6500,7 @@ export function registerPayrollModules(FinanceApp) {
     if (this.db.letters_of_assignment) {
       this.db.letters_of_assignment = this.db.letters_of_assignment.filter(l => l.id !== loaId && l.ref_no !== loaId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
     this.renderActiveTab();
     this.showNotification(`Letter ${label} deleted.`, 'info');
     await this.syncApi('delete_letter_of_assignment', { id: loaId });
