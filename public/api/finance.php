@@ -4364,53 +4364,8 @@ function reconcileV82EmployeesAndPayroll(&$data, $pdo) {
             $pdo->exec("DELETE FROM finance_payroll WHERE id IN ('ps-june2026-en12001', 'PSJune 2026/EN12001') OR slip_no IN ('ps-june2026-en12001', 'PSJune 2026/EN12001')");
         } catch (Exception $e) {}
     }
+    $deletedEmps = array_map('strtolower', $data['deleted_employee_ids'] ?? []);
     if (isset($data['employees']) && is_array($data['employees'])) {
-        foreach ($data['employees'] as &$emp) {
-            if (($emp['employee_no'] ?? '') === 'EN12006' || stripos($emp['name'] ?? '', 'Kamala') !== false) {
-                $emp['status'] = 'Active';
-                $emp['gender'] = 'Female';
-                $emp['end_date'] = '';
-                $emp['resignation_date'] = '';
-                $emp['date_of_leaving'] = '';
-                $emp['end_reason'] = '';
-            } else if (($emp['employee_no'] ?? '') === 'EN12002' || stripos($emp['name'] ?? '', 'Menta') !== false) {
-                if (empty($emp['gender'])) $emp['gender'] = 'Female';
-            } else if (empty($emp['gender'])) {
-                $emp['gender'] = 'Male';
-            }
-            if (empty($emp['eid_expiry_date']) && !empty($emp['visa_expiry_date'])) {
-                $emp['eid_expiry_date'] = $emp['visa_expiry_date'];
-            }
-            if (!isset($emp['passport_expiry_date'])) {
-                $emp['passport_expiry_date'] = '';
-            }
-            if (stripos($emp['name'] ?? '', 'Bakhteyar') !== false || ($emp['id'] ?? '') === 'emp-en12009' || ($emp['employee_no'] ?? '') === 'EN12009') {
-                $emp['id'] = 'emp-en12009';
-                $emp['employee_no'] = 'EN12009';
-                if (($emp['phone'] ?? '') === '+971 50 123 4567') {
-                    $emp['phone'] = '+971528990903';
-                }
-                if (($emp['email'] ?? '') === 'bakhteyar@rayan-group.com') {
-                    $emp['email'] = 'bakhteyarnke@gmail.com';
-                }
-                if (stripos($emp['project_name'] ?? '', 'Police Academy') !== false) {
-                    $emp['project_id'] = '';
-                    $emp['project_name'] = 'Corporate / General Overhead';
-                }
-                if (($emp['basic_salary'] ?? 0) == 9500 && ($emp['accommodation_allowance'] ?? 0) == 5500) {
-                    $emp['basic_salary'] = 16000;
-                    $emp['accommodation_allowance'] = 4000;
-                    $emp['other_allowance'] = 16000;
-                }
-            }
-            if (stripos($emp['name'] ?? '', 'Shafiur') !== false) {
-                $emp['id'] = 'emp-en12004';
-                $emp['employee_no'] = 'EN12004';
-            }
-        }
-        unset($emp);
-
-        $deletedEmps = array_map('strtolower', $data['deleted_employee_ids'] ?? []);
         if (!empty($deletedEmps)) {
             $data['employees'] = array_values(array_filter($data['employees'], function($e) use ($deletedEmps) {
                 $eId = strtolower(trim($e['id'] ?? ''));
@@ -4419,52 +4374,46 @@ function reconcileV82EmployeesAndPayroll(&$data, $pdo) {
             }));
         }
 
-        $hasBakht = false;
-        foreach ($data['employees'] as $e) {
-            if (stripos($e['name'] ?? '', 'Bakhteyar') !== false || ($e['employee_no'] ?? '') === 'EN12009' || ($e['id'] ?? '') === 'emp-en12009') {
-                $hasBakht = true;
-                break;
+        // Deduplicate employees by employee_no/id keeping the most recently updated record (with photo fallback)
+        $dedupedEmps = [];
+        foreach ($data['employees'] as $emp) {
+            if (!is_array($emp)) continue;
+            if (empty($emp['gender'])) {
+                if (($emp['employee_no'] ?? '') === 'EN12002' || stripos($emp['name'] ?? '', 'Menta') !== false || ($emp['employee_no'] ?? '') === 'EN12006' || stripos($emp['name'] ?? '', 'Kamala') !== false) {
+                    $emp['gender'] = 'Female';
+                } else {
+                    $emp['gender'] = 'Male';
+                }
+            }
+            if (empty($emp['eid_expiry_date']) && !empty($emp['visa_expiry_date'])) {
+                $emp['eid_expiry_date'] = $emp['visa_expiry_date'];
+            }
+            if (!isset($emp['passport_expiry_date'])) {
+                $emp['passport_expiry_date'] = '';
+            }
+            $k = strtolower(trim($emp['employee_no'] ?? $emp['id'] ?? ''));
+            if (!$k) {
+                $dedupedEmps[] = $emp;
+                continue;
+            }
+            if (!isset($dedupedEmps[$k])) {
+                $dedupedEmps[$k] = $emp;
+            } else {
+                $prev = $dedupedEmps[$k];
+                $curTs = !empty($emp['updated_at']) ? strtotime($emp['updated_at']) : 0;
+                $prevTs = !empty($prev['updated_at']) ? strtotime($prev['updated_at']) : 0;
+                if ($curTs > $prevTs) {
+                    if (empty($emp['photo']) && !empty($prev['photo']) && !array_key_exists('photo', $emp)) {
+                        $emp['photo'] = $prev['photo'];
+                    }
+                    $dedupedEmps[$k] = $emp;
+                } elseif (empty($prev['photo']) && !empty($emp['photo']) && $curTs === $prevTs) {
+                    $dedupedEmps[$k]['photo'] = $emp['photo'];
+                }
             }
         }
-        $isBakhtDel = in_array('emp-en12009', $deletedEmps) || in_array('en12009', $deletedEmps);
-        if (!$hasBakht && !$isBakhtDel) {
-            $data['employees'][] = [
-                'id' => 'emp-en12009',
-                'employee_no' => 'EN12009',
-                'company_id' => 'rayan-corp-uae',
-                'name' => 'Bakhteyar Alam Mokhtar Ahmad',
-                'name_ar' => 'بختيار عالم مختار احمد',
-                'position' => 'Civil Engineer',
-                'position_ar' => 'مهندس مدني',
-                'department' => 'Rayan Engineering',
-                'date_of_joining' => '2025-08-10',
-                'date_of_appointment' => '2025-08-10',
-                'currency' => 'AED',
-                'phone' => '+971528990903',
-                'email' => 'bakhteyarnke@gmail.com',
-                'emirates_id' => '784-1996-4684544-8',
-                'eid_expiry_date' => '2027-08-11',
-                'passport_no' => 'S3552106',
-                'passport_expiry_date' => '2028-09-03',
-                'nationality' => 'India',
-                'nationality_ar' => 'هندي',
-                'gender' => 'Male',
-                'visa_status' => 'Employment Visa (Rayan Engineering)',
-                'basic_salary' => 16000.00,
-                'accommodation_allowance' => 4000.00,
-                'consolidated_allowance' => 0.00,
-                'other_allowance' => 16000.00,
-                'bank_name' => 'Emirates NBD Bank PJSC',
-                'swift' => 'EBILAEADXXX',
-                'iban' => 'AE860260001015934645101',
-                'account_no' => 'AE860260001015934645101',
-                'default_pay_method' => 'AED RAYAN GROUP Host To Host',
-                'project_id' => '',
-                'project_name' => 'Corporate / General Overhead',
-                'status' => 'Active',
-                'eligible_for_rehire' => 'yes'
-            ];
-        }
+        $data['employees'] = array_values($dedupedEmps);
+
         usort($data['employees'], function($a, $b) {
             return strnatcasecmp($a['employee_no'] ?? '', $b['employee_no'] ?? '');
         });
@@ -6876,6 +6825,17 @@ function syncFromRelationalTables($pdo, &$data) {
             $delSet[strtolower(trim($dVal))] = true;
         }
 
+        $deletedEmpSet = [];
+        foreach (($data['deleted_employee_ids'] ?? []) as $dEmp) {
+            $dLow = strtolower(trim($dEmp));
+            if ($dLow) $deletedEmpSet[$dLow] = true;
+        }
+        $deletedPaySet = [];
+        foreach (($data['deleted_payroll_ids'] ?? []) as $dPay) {
+            $dLow = strtolower(trim($dPay));
+            if ($dLow) $deletedPaySet[$dLow] = true;
+        }
+
         foreach ($syncMapping as $m) {
             try {
                 $rows = $pdo->query("SELECT * FROM {$m['table']} ORDER BY {$m['order']}")->fetchAll(PDO::FETCH_ASSOC);
@@ -6893,10 +6853,11 @@ function syncFromRelationalTables($pdo, &$data) {
                     foreach ($rows as $r) {
                         $obj = !empty($r['data_json']) ? json_decode($r['data_json'], true) : [];
                         if (!is_array($obj)) $obj = [];
+                        $jsonTs = !empty($obj['updated_at']) ? strtotime($obj['updated_at']) : 0;
                         // Authoritative relational database columns in MySQL take precedence over stale serialized JSON
                         foreach ($r as $colName => $colVal) {
                             if ($colName === 'data_json') continue;
-                            if ($colVal !== null && $colVal !== '') {
+                            if ($colVal !== null && $colVal !== '' && $colVal !== '0000-00-00') {
                                 $obj[$colName] = $colVal;
                             }
                         }
@@ -6911,6 +6872,20 @@ function syncFromRelationalTables($pdo, &$data) {
                                 continue;
                             }
                         }
+                        if ($k === 'employees' && !empty($deletedEmpSet)) {
+                            $objId = strtolower(trim($obj['id'] ?? ''));
+                            $objNo = strtolower(trim($obj['employee_no'] ?? ''));
+                            if (isset($deletedEmpSet[$objId]) || ($objNo && isset($deletedEmpSet[$objNo]))) {
+                                continue;
+                            }
+                        }
+                        if ($k === 'payroll' && !empty($deletedPaySet)) {
+                            $objId = strtolower(trim($obj['id'] ?? ''));
+                            $objSlip = strtolower(trim($obj['slip_no'] ?? ''));
+                            if (isset($deletedPaySet[$objId]) || ($objSlip && isset($deletedPaySet[$objSlip]))) {
+                                continue;
+                            }
+                        }
                         $foundIdx = -1;
                         foreach ($m['id_fields'] as $f) {
                             if (!empty($obj[$f])) {
@@ -6922,10 +6897,21 @@ function syncFromRelationalTables($pdo, &$data) {
                             }
                         }
                         if ($foundIdx >= 0) {
-                            // Relational table columns (updated via phpMyAdmin / SQL / UI) are authoritative
-                            foreach ($obj as $kField => $vField) {
-                                if ($vField !== null && $vField !== '') {
-                                    $data[$k][$foundIdx][$kField] = $vField;
+                            if ($k === 'employees' || $k === 'payroll') {
+                                $existingItem = $data[$k][$foundIdx];
+                                $curTs = !empty($existingItem['updated_at']) ? strtotime($existingItem['updated_at']) : 0;
+                                $relSqlTs = !empty($r['updated_at']) ? strtotime($r['updated_at']) : 0;
+                                $rowEffTs = max($jsonTs ?: 0, $relSqlTs ?: 0);
+                                if ($rowEffTs >= $curTs) {
+                                    // Preserve explicit empty strings (e.g. cleared end_date, project_id, photo) from authoritative relational JSON
+                                    $data[$k][$foundIdx] = array_merge($existingItem, $obj);
+                                }
+                            } else {
+                                // Relational table columns (updated via phpMyAdmin / SQL / UI) are authoritative
+                                foreach ($obj as $kField => $vField) {
+                                    if ($vField !== null && $vField !== '') {
+                                        $data[$k][$foundIdx][$kField] = $vField;
+                                    }
                                 }
                             }
                         } else {
@@ -7676,19 +7662,31 @@ function syncToRelationalTables($pdo, &$data) {
             }
         }
 
-        // 26. Employees
-        if (!empty($data['employees']) && is_array($data['employees'])) {
-            $stmt = $pdo->prepare("REPLACE INTO finance_employees (id, employee_no, company_id, name, designation, department, joining_date, phone, email, bank_name, iban, account_no, swift, basic_salary, accommodation_allowance, consolidated_allowance, other_allowance, project_id, project_name, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        // 26. Employees (deduplicate & remove stale orphaned rows)
+        if (isset($data['employees']) && is_array($data['employees'])) {
+            $dedupedEmps = [];
             foreach ($data['employees'] as $emp) {
                 if (empty($emp['id']) && empty($emp['employee_no'])) continue;
+                $k = strtolower(trim($emp['employee_no'] ?? $emp['id']));
+                $dedupedEmps[$k] = $emp;
+            }
+            $data['employees'] = array_values($dedupedEmps);
+
+            $syncedEmpIds = [];
+            $stmt = $pdo->prepare("REPLACE INTO finance_employees (id, employee_no, company_id, name, designation, department, joining_date, phone, email, bank_name, iban, account_no, swift, basic_salary, accommodation_allowance, consolidated_allowance, other_allowance, project_id, project_name, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            foreach ($data['employees'] as $emp) {
+                $eid = $emp['id'] ?? ('emp-' . strtolower(trim($emp['employee_no'] ?? rand(1000, 9999))));
+                $syncedEmpIds[] = $eid;
+                $joinRaw = $emp['date_of_joining'] ?? ($emp['date_of_appointment'] ?? '');
+                $joinSql = (is_string($joinRaw) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $joinRaw)) ? $joinRaw : null;
                 $stmt->execute([
-                    $emp['id'] ?? ('emp-' . rand(1000, 9999)),
+                    $eid,
                     $emp['employee_no'] ?? '',
                     $emp['company_id'] ?? 'rayan-corp-uae',
                     $emp['name'] ?? '',
                     $emp['position'] ?? ($emp['designation'] ?? ''),
                     $emp['department'] ?? '',
-                    $emp['date_of_joining'] ?? ($emp['date_of_appointment'] ?? date('Y-m-d')),
+                    $joinSql,
                     $emp['phone'] ?? '',
                     $emp['email'] ?? '',
                     $emp['bank_name'] ?? '',
@@ -7705,22 +7703,31 @@ function syncToRelationalTables($pdo, &$data) {
                     json_encode($emp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
             }
+            if (!empty($syncedEmpIds)) {
+                $inQ = implode(',', array_fill(0, count($syncedEmpIds), '?'));
+                $pdo->prepare("DELETE FROM finance_employees WHERE id NOT IN ($inQ)")->execute($syncedEmpIds);
+            }
         }
 
-        // 27. Payroll
-        if (!empty($data['payroll']) && is_array($data['payroll'])) {
+        // 27. Payroll (sync & remove stale deleted/orphaned rows)
+        if (isset($data['payroll']) && is_array($data['payroll'])) {
+            $syncedPayIds = [];
             $stmt = $pdo->prepare("REPLACE INTO finance_payroll (id, slip_no, company_id, employee_id, employee_no, employee_name, month_year, payment_date, basic_salary, accommodation_allowance, consolidated_allowance, overtime_amount, total_earnings, total_deductions, net_pay, payment_method, payment_source_type, payment_source_id, payment_source_name, project_id, project_name, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
             foreach ($data['payroll'] as $p) {
                 if (empty($p['id']) && empty($p['slip_no'])) continue;
+                $pid = $p['id'] ?? ('ps-' . rand(10000, 99999));
+                $syncedPayIds[] = $pid;
+                $payRaw = $p['payment_date'] ?? '';
+                $paySql = (is_string($payRaw) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $payRaw)) ? $payRaw : date('Y-m-d');
                 $stmt->execute([
-                    $p['id'] ?? ('ps-' . rand(10000, 99999)),
+                    $pid,
                     $p['slip_no'] ?? '',
                     $p['company_id'] ?? 'rayan-corp-uae',
                     $p['employee_id'] ?? '',
                     $p['employee_no'] ?? '',
                     $p['employee_name'] ?? '',
                     $p['month_year'] ?? '',
-                    $p['payment_date'] ?? date('Y-m-d'),
+                    $paySql,
                     floatval($p['basic_salary'] ?? 0),
                     floatval($p['accommodation_allowance'] ?? 0),
                     floatval($p['consolidated_allowance'] ?? 0),
@@ -7737,6 +7744,10 @@ function syncToRelationalTables($pdo, &$data) {
                     $p['status'] ?? 'Pending',
                     json_encode($p, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
+            }
+            if (!empty($syncedPayIds)) {
+                $inQ = implode(',', array_fill(0, count($syncedPayIds), '?'));
+                $pdo->prepare("DELETE FROM finance_payroll WHERE id NOT IN ($inQ)")->execute($syncedPayIds);
             }
         }
     } catch (Exception $e) {
@@ -12259,30 +12270,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($emp['id'])) {
                     $emp['id'] = 'emp-' . round(microtime(true) * 1000);
                 }
+                if (empty($emp['updated_at'])) {
+                    $emp['updated_at'] = gmdate('Y-m-d\TH:i:s\Z');
+                }
                 if (!isset($db['employees']) || !is_array($db['employees'])) {
                     $db['employees'] = [];
                 }
-                $found = false;
-                foreach ($db['employees'] as &$existing) {
-                    if (($existing['id'] ?? '') === $emp['id'] || (!empty($emp['employee_no']) && strcasecmp($existing['employee_no'] ?? '', $emp['employee_no']) === 0)) {
-                        $existing = array_merge($existing, $emp);
-                        $found = true;
-                        break;
+                $eIdTarget = strtolower(trim($emp['id'] ?? ''));
+                $eNoTarget = strtolower(trim($emp['employee_no'] ?? ''));
+                $baseExisting = [];
+                $remainingEmps = [];
+                foreach ($db['employees'] as $existing) {
+                    if (!is_array($existing)) continue;
+                    $exId = strtolower(trim($existing['id'] ?? ''));
+                    $exNo = strtolower(trim($existing['employee_no'] ?? ''));
+                    if (($eIdTarget && $exId === $eIdTarget) || ($eNoTarget && $exNo === $eNoTarget)) {
+                        if (empty($baseExisting) || (!empty($existing['photo']) && empty($baseExisting['photo']))) {
+                            $baseExisting = array_merge($baseExisting, $existing);
+                        }
+                    } else {
+                        $remainingEmps[] = $existing;
                     }
                 }
-                unset($existing);
-                if (!$found) {
-                    array_unshift($db['employees'], $emp);
-                }
+                $emp = array_merge($baseExisting, $emp);
+                $remainingEmps[] = $emp;
+                usort($remainingEmps, function($a, $b) {
+                    return strnatcasecmp($a['employee_no'] ?? '', $b['employee_no'] ?? '');
+                });
+                $db['employees'] = $remainingEmps;
+
                 if (!empty($db['deleted_employee_ids']) && is_array($db['deleted_employee_ids'])) {
-                    $eIdLower = strtolower(trim($emp['id'] ?? ''));
-                    $eNoLower = strtolower(trim($emp['employee_no'] ?? ''));
-                    $db['deleted_employee_ids'] = array_values(array_filter($db['deleted_employee_ids'], function($d) use ($eIdLower, $eNoLower) {
-                        return $d !== $eIdLower && $d !== $eNoLower;
+                    $db['deleted_employee_ids'] = array_values(array_filter($db['deleted_employee_ids'], function($d) use ($eIdTarget, $eNoTarget) {
+                        $dLow = strtolower(trim($d ?? ''));
+                        return $dLow !== $eIdTarget && (!$eNoTarget || $dLow !== $eNoTarget);
                     }));
                 }
                 if ($pdo) {
                     try {
+                        if ($eNoTarget !== '') {
+                            $pdo->prepare("DELETE FROM finance_employees WHERE id != ? AND LOWER(employee_no) = ?")->execute([$emp['id'], $eNoTarget]);
+                        }
+                        $joinRaw = $emp['date_of_joining'] ?? ($emp['date_of_appointment'] ?? '');
+                        $joinSql = (is_string($joinRaw) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $joinRaw)) ? $joinRaw : null;
                         $stmt = $pdo->prepare("REPLACE INTO finance_employees (id, employee_no, company_id, name, designation, department, joining_date, phone, email, bank_name, iban, account_no, swift, basic_salary, accommodation_allowance, consolidated_allowance, other_allowance, project_id, project_name, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
                         $stmt->execute([
                             $emp['id'],
@@ -12291,7 +12320,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $emp['name'] ?? '',
                             $emp['position'] ?? ($emp['designation'] ?? ''),
                             $emp['department'] ?? '',
-                            $emp['date_of_joining'] ?? ($emp['date_of_appointment'] ?? date('Y-m-d')),
+                            $joinSql,
                             $emp['phone'] ?? '',
                             $emp['email'] ?? '',
                             $emp['bank_name'] ?? '',
@@ -12305,7 +12334,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $emp['project_id'] ?? '',
                             $emp['project_name'] ?? '',
                             $emp['status'] ?? 'Active',
-                            json_encode($emp)
+                            json_encode($emp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                         ]);
                     } catch (Exception $e) {
                         error_log("save_employee DB error: " . $e->getMessage());
@@ -12433,28 +12462,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
 
         case 'disburse_payroll':
-            $slipId = $body['slip_id'] ?? '';
+            $slipId = $body['slip_id'] ?? ($body['payroll']['id'] ?? '');
             $slipData = $body['payroll'] ?? [];
-            $sourceType = $body['source_type'] ?? 'cash';
-            $sourceId = $body['source_id'] ?? '';
+            $sourceType = $body['source_type'] ?? ($slipData['payout_source_type'] ?? 'cash');
+            $sourceId = $body['source_id'] ?? ($slipData['payout_source_id'] ?? '');
             $amount = floatval($body['amount'] ?? ($slipData['net_pay'] ?? 0));
-            $payoutDate = $body['payment_date'] ?? date('Y-m-d');
-            $payoutRef = $body['payout_reference'] ?? ('TXN-PAYROLL-' . round(microtime(true) * 1000));
-
-            // 1. Mark payslip as Paid in db
-            if (!empty($db['payroll'])) {
-                foreach ($db['payroll'] as &$p) {
-                    if (($p['id'] ?? '') === $slipId || ($p['slip_no'] ?? '') === ($slipData['slip_no'] ?? '')) {
-                        $p['status'] = 'Paid';
-                        $p['payment_date'] = $payoutDate;
-                        $p['payout_source_type'] = $sourceType;
-                        $p['payout_source_id'] = $sourceId;
-                        $p['payout_reference'] = $payoutRef;
-                        break;
-                    }
-                }
-                unset($p);
-            }
+            $payoutDate = $body['payment_date'] ?? ($slipData['payment_date'] ?? date('Y-m-d'));
+            $payoutRef = $body['payout_reference'] ?? ($slipData['payout_reference'] ?? ('TXN-PAYROLL-' . round(microtime(true) * 1000)));
+            $sourceName = $slipData['payout_source_name'] ?? ($sourceType === 'cash' ? 'RAYAN E-Wallets' : 'Abu Dhabi Commercial Bank (ADCB)');
 
             // 2. Deduct from Bank Account or Cash in Hand & record relational transaction
             if ($sourceType === 'cash') {
@@ -12470,23 +12485,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     unset($c);
                 }
+                $sourceName = $regName;
                 if ($pdo) {
                     try {
-                        $pdo->exec("UPDATE finance_cash_in_hand SET balance = balance - {$amount}, updated_at = NOW() WHERE id = '{$sourceId}' OR register_name LIKE '%e-wallet%'");
+                        $pdo->prepare("UPDATE finance_cash_in_hand SET balance = balance - ?, updated_at = NOW() WHERE id = ? OR register_name LIKE '%e-wallet%'")->execute([$amount, $sourceId]);
                     } catch (Exception $e) {}
                 }
 
-                // Create Cash Voucher in db and MySQL
+                // Create Cash Voucher in db and MySQL with proper register_id & payee columns
                 $cvObj = [
                     'id' => 'cv-' . round(microtime(true) * 1000),
                     'voucher_no' => $payoutRef,
                     'company_id' => $slipData['company_id'] ?? 'rayan-corp-uae',
+                    'register_id' => $sourceId ?: 'cash-mw5esv3w',
                     'cash_in_hand_id' => $sourceId ?: 'cash-mw5esv3w',
                     'register_name' => $regName,
+                    'custodian' => 'Arshad Alam Shaikh',
                     'voucher_date' => $payoutDate,
                     'date' => $payoutDate,
                     'type' => 'outflow',
                     'category' => 'Salary & Labor Payout',
+                    'payee' => $slipData['employee_name'] ?? 'Staff',
                     'party_name' => $slipData['employee_name'] ?? 'Staff',
                     'amount' => $amount,
                     'currency' => $slipData['currency'] ?? 'AED',
@@ -12498,14 +12517,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 array_unshift($db['cash_vouchers'], $cvObj);
                 if ($pdo) {
                     try {
-                        $stmtCv = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, voucher_no, company_id, cash_in_hand_id, register_name, voucher_date, type, category, party_name, amount, currency, purpose, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                        $colsCv = $pdo->query("SHOW COLUMNS FROM finance_cash_vouchers")->fetchAll(PDO::FETCH_COLUMN);
+                        if (!in_array('register_id', $colsCv)) {
+                            $pdo->exec("ALTER TABLE finance_cash_vouchers ADD COLUMN register_id VARCHAR(64) NULL AFTER company_id");
+                        }
+                        $stmtCv = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, company_id, register_id, voucher_no, voucher_date, register_name, custodian, payee, purpose, category, amount, currency, type, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
                         $stmtCv->execute([
-                            $cvObj['id'], $cvObj['voucher_no'], $cvObj['company_id'], $cvObj['cash_in_hand_id'],
-                            $cvObj['register_name'], $cvObj['voucher_date'], $cvObj['type'], $cvObj['category'],
-                            $cvObj['party_name'], $cvObj['amount'], $cvObj['currency'], $cvObj['purpose'],
-                            $cvObj['status'], json_encode($cvObj)
+                            $cvObj['id'], $cvObj['company_id'], $cvObj['register_id'], $cvObj['voucher_no'],
+                            $cvObj['voucher_date'], $cvObj['register_name'], $cvObj['custodian'], $cvObj['payee'],
+                            $cvObj['purpose'], $cvObj['category'], $cvObj['amount'], $cvObj['currency'],
+                            $cvObj['type'], $cvObj['status'], json_encode($cvObj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                         ]);
-                    } catch (Exception $e) {}
+                    } catch (Exception $e) {
+                        error_log("disburse_payroll CV DB error: " . $e->getMessage());
+                    }
                 }
             } else {
                 $bankName = 'Abu Dhabi Commercial Bank (ADCB)';
@@ -12520,9 +12545,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     unset($b);
                 }
+                $sourceName = $bankName;
                 if ($pdo) {
                     try {
-                        $pdo->exec("UPDATE finance_bank_accounts SET balance = balance - {$amount}, updated_at = NOW() WHERE id = '{$sourceId}'");
+                        $pdo->prepare("UPDATE finance_bank_accounts SET balance = balance - ?, updated_at = NOW() WHERE id = ?")->execute([$amount, $sourceId]);
                     } catch (Exception $e) {}
                 }
 
@@ -12554,18 +12580,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $wireObj['id'], $wireObj['company_id'], $wireObj['reference_no'], $wireObj['transfer_date'],
                             $wireObj['counterparty'], $wireObj['source_account_id'], $wireObj['source_bank'],
                             $wireObj['type'], $wireObj['amount'], $wireObj['currency'], $wireObj['purpose'],
-                            $wireObj['status'], json_encode($wireObj)
+                            $wireObj['status'], json_encode($wireObj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                         ]);
                     } catch (Exception $e) {}
                 }
             }
 
-            // 3. Update relational finance_payroll in MySQL
-            if ($pdo) {
+            // 1 & 3. Mark payslip as Paid in db AND sync full record + actual schema columns into finance_payroll
+            $updatedSlip = null;
+            if (!isset($db['payroll']) || !is_array($db['payroll'])) $db['payroll'] = [];
+            foreach ($db['payroll'] as &$p) {
+                if (($p['id'] ?? '') === $slipId || (!empty($slipData['slip_no']) && ($p['slip_no'] ?? '') === $slipData['slip_no'])) {
+                    $p = array_merge($p, $slipData);
+                    $p['status'] = 'Paid';
+                    $p['payment_date'] = $payoutDate;
+                    $p['payout_source_type'] = $sourceType;
+                    $p['payout_source_id'] = $sourceId;
+                    $p['payout_source_name'] = $sourceName;
+                    $p['payout_reference'] = $payoutRef;
+                    $p['payment_source_type'] = $sourceType;
+                    $p['payment_source_id'] = $sourceId;
+                    $p['payment_source_name'] = $sourceName;
+                    $p['updated_at'] = gmdate('Y-m-d\TH:i:s\Z');
+                    $updatedSlip = $p;
+                    break;
+                }
+            }
+            unset($p);
+            if (!$updatedSlip && !empty($slipData)) {
+                $slipData['id'] = $slipId ?: ('ps-' . round(microtime(true) * 1000));
+                $slipData['status'] = 'Paid';
+                $slipData['payment_date'] = $payoutDate;
+                $slipData['payout_source_type'] = $sourceType;
+                $slipData['payout_source_id'] = $sourceId;
+                $slipData['payout_source_name'] = $sourceName;
+                $slipData['payout_reference'] = $payoutRef;
+                $slipData['payment_source_type'] = $sourceType;
+                $slipData['payment_source_id'] = $sourceId;
+                $slipData['payment_source_name'] = $sourceName;
+                $slipData['updated_at'] = gmdate('Y-m-d\TH:i:s\Z');
+                array_unshift($db['payroll'], $slipData);
+                $updatedSlip = $slipData;
+            }
+
+            if ($pdo && $updatedSlip) {
                 try {
-                    $pdo->prepare("UPDATE finance_payroll SET status = 'Paid', payment_date = ?, payout_source_type = ?, payout_source_id = ?, payout_source_name = ?, payout_reference = ?, updated_at = NOW() WHERE id = ? OR slip_no = ?")
-                        ->execute([$payoutDate, $sourceType, $sourceId, $sourceType === 'cash' ? ($regName ?? 'RAYAN E-Wallets') : ($bankName ?? 'ADCB'), $payoutRef, $slipId, $slipData['slip_no'] ?? $slipId]);
-                } catch (Exception $e) {}
+                    $paySql = (is_string($payoutDate) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $payoutDate)) ? $payoutDate : date('Y-m-d');
+                    $stmtPay = $pdo->prepare("REPLACE INTO finance_payroll (id, slip_no, company_id, employee_id, employee_no, employee_name, month_year, payment_date, basic_salary, accommodation_allowance, consolidated_allowance, overtime_amount, total_earnings, total_deductions, net_pay, payment_method, payment_source_type, payment_source_id, payment_source_name, project_id, project_name, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                    $stmtPay->execute([
+                        $updatedSlip['id'],
+                        $updatedSlip['slip_no'] ?? '',
+                        $updatedSlip['company_id'] ?? 'rayan-corp-uae',
+                        $updatedSlip['employee_id'] ?? '',
+                        $updatedSlip['employee_no'] ?? '',
+                        $updatedSlip['employee_name'] ?? '',
+                        $updatedSlip['month_year'] ?? '',
+                        $paySql,
+                        floatval($updatedSlip['basic_salary'] ?? 0),
+                        floatval($updatedSlip['accommodation_allowance'] ?? 0),
+                        floatval($updatedSlip['consolidated_allowance'] ?? 0),
+                        floatval($updatedSlip['normal_overtime'] ?? ($updatedSlip['overtime_amount'] ?? 0)),
+                        floatval($updatedSlip['total_earnings'] ?? 0),
+                        floatval($updatedSlip['total_deductions'] ?? 0),
+                        floatval($updatedSlip['net_pay'] ?? 0),
+                        $updatedSlip['pay_method'] ?? '',
+                        $sourceType,
+                        $sourceId,
+                        $sourceName,
+                        $updatedSlip['project_id'] ?? '',
+                        $updatedSlip['project_name'] ?? '',
+                        'Paid',
+                        json_encode($updatedSlip, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                    ]);
+                } catch (Exception $e) {
+                    error_log("disburse_payroll DB error: " . $e->getMessage());
+                }
             }
 
             $addAuditLog('disburse', 'payroll', $slipId, "Disbursed {$amount} AED from {$sourceType} {$sourceId} for slip {$slipId}");

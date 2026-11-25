@@ -107,7 +107,10 @@ async function deploy() {
               localEmployees.forEach(emp => {
                 const target = liveJson.data.employees.find(p => p.id === emp.id || p.employee_no === emp.employee_no);
                 if (!target) {
-                  liveJson.data.employees.push(emp);
+                  const delSet = new Set((liveJson.data.deleted_employee_ids || []).map(x => String(x).toLowerCase()));
+                  if (!delSet.has(String(emp.id || '').toLowerCase()) && !delSet.has(String(emp.employee_no || '').toLowerCase())) {
+                    liveJson.data.employees.push(emp);
+                  }
                 } else {
                   target.address = target.address || emp.address;
                   target.local_address = target.local_address || emp.local_address || emp.address;
@@ -116,68 +119,22 @@ async function deploy() {
                   target.emergency_contact_relation = target.emergency_contact_relation || emp.emergency_contact_relation;
                   target.emergency_contact_phone = target.emergency_contact_phone || emp.emergency_contact_phone;
                   target.visa_status = target.visa_status || emp.visa_status;
-                  target.visa_expiry_date = target.visa_expiry_date || emp.visa_expiry_date;
                   target.labor_card_no = target.labor_card_no || emp.labor_card_no;
                   if (!target.photo && emp.photo) target.photo = emp.photo;
-                  if (emp.gender) target.gender = emp.gender;
-                  if (emp.passport_expiry_date !== undefined) target.passport_expiry_date = emp.passport_expiry_date;
-                  if (emp.eid_expiry_date !== undefined) target.eid_expiry_date = emp.eid_expiry_date;
-                  if (emp.eligible_for_rehire !== undefined) target.eligible_for_rehire = emp.eligible_for_rehire;
-                  if (emp.rehire_notes !== undefined) target.rehire_notes = emp.rehire_notes;
-                  // Enforce Bakhteyar as EN12009 and Shafiur as EN12004
-                  if (target.name && target.name.includes('Bakhteyar')) {
-                    target.id = 'emp-en12009';
-                    target.employee_no = 'EN12009';
-                  }
-                  if (target.name && target.name.includes('Shafiur')) {
-                    target.id = 'emp-en12004';
-                    target.employee_no = 'EN12004';
-                  }
-                  // If employee is Kamala Chhetri (EN12006), enforce Active status and clear end date
-                  if (target.employee_no === 'EN12006' || (target.name && target.name.includes('Kamala'))) {
-                    target.status = 'Active';
-                    target.gender = 'Female';
-                    target.end_date = '';
-                    target.resignation_date = '';
-                    target.date_of_leaving = '';
-                    target.end_reason = '';
-                  }
+                  if (!target.gender && emp.gender) target.gender = emp.gender;
                 }
               });
 
-              // Enforce Kamala Chhetri as Active
               if (Array.isArray(liveJson.data.employees)) {
+                const empDedup = new Map();
                 liveJson.data.employees.forEach(emp => {
-                  if (emp.name && emp.name.includes('Bakhteyar')) {
-                    emp.id = 'emp-en12009';
-                    emp.employee_no = 'EN12009';
-                    if (emp.phone === '+971 50 123 4567') emp.phone = '+971528990903';
-                    if (emp.email === 'bakhteyar@rayan-group.com') emp.email = 'bakhteyarnke@gmail.com';
-                    if (emp.project_name && emp.project_name.includes('Police Academy')) {
-                      emp.project_id = '';
-                      emp.project_name = 'Corporate / General Overhead';
+                  if (!emp) return;
+                  if (!emp.gender) {
+                    if (emp.employee_no === 'EN12002' || (emp.name && emp.name.includes('Menta')) || emp.employee_no === 'EN12006' || (emp.name && emp.name.includes('Kamala'))) {
+                      emp.gender = 'Female';
+                    } else {
+                      emp.gender = 'Male';
                     }
-                    if (emp.basic_salary === 9500 && emp.accommodation_allowance === 5500) {
-                      emp.basic_salary = 16000;
-                      emp.accommodation_allowance = 4000;
-                      emp.other_allowance = 16000;
-                    }
-                  }
-                  if (emp.name && emp.name.includes('Shafiur')) {
-                    emp.id = 'emp-en12004';
-                    emp.employee_no = 'EN12004';
-                  }
-                  if (emp.employee_no === 'EN12006' || (emp.name && emp.name.includes('Kamala'))) {
-                    emp.status = 'Active';
-                    emp.gender = 'Female';
-                    emp.end_date = '';
-                    emp.resignation_date = '';
-                    emp.date_of_leaving = '';
-                    emp.end_reason = '';
-                  } else if (emp.employee_no === 'EN12002' || (emp.name && emp.name.includes('Menta'))) {
-                    emp.gender = 'Female';
-                  } else if (!emp.gender) {
-                    emp.gender = 'Male';
                   }
                   if (!emp.eid_expiry_date && emp.visa_expiry_date) {
                     emp.eid_expiry_date = emp.visa_expiry_date;
@@ -185,49 +142,21 @@ async function deploy() {
                   if (!emp.passport_expiry_date) {
                     emp.passport_expiry_date = '';
                   }
+                  const k = (emp.employee_no || emp.id || '').trim().toUpperCase();
+                  if (!k) return;
+                  if (!empDedup.has(k)) {
+                    empDedup.set(k, emp);
+                  } else {
+                    const prev = empDedup.get(k);
+                    const curTs = emp.updated_at ? Date.parse(String(emp.updated_at).replace(' ', 'T')) : 0;
+                    const prevTs = prev.updated_at ? Date.parse(String(prev.updated_at).replace(' ', 'T')) : 0;
+                    if (curTs >= prevTs) {
+                      if (!emp.photo && prev.photo) emp.photo = prev.photo;
+                      empDedup.set(k, emp);
+                    }
+                  }
                 });
-
-                const delEmps = (liveJson.data.deleted_employee_ids || []).map(x => String(x).toLowerCase());
-                const isBakhtDel = delEmps.includes('emp-en12009') || delEmps.includes('en12009');
-                const hasBakht = liveJson.data.employees.some(e => (e.name && e.name.includes('Bakhteyar')) || e.employee_no === 'EN12009' || e.id === 'emp-en12009');
-                if (!hasBakht && !isBakhtDel) {
-                  liveJson.data.employees.push({
-                    id: 'emp-en12009',
-                    employee_no: 'EN12009',
-                    company_id: 'rayan-corp-uae',
-                    name: 'Bakhteyar Alam Mokhtar Ahmad',
-                    name_ar: 'بختيار عالم مختار احمد',
-                    position: 'Civil Engineer',
-                    position_ar: 'مهندس مدني',
-                    department: 'Rayan Engineering',
-                    date_of_joining: '2025-08-10',
-                    date_of_appointment: '2025-08-10',
-                    currency: 'AED',
-                    phone: '+971528990903',
-                    email: 'bakhteyarnke@gmail.com',
-                    emirates_id: '784-1996-4684544-8',
-                    eid_expiry_date: '2027-08-11',
-                    passport_no: 'S3552106',
-                    passport_expiry_date: '2028-09-03',
-                    nationality: 'India',
-                    nationality_ar: 'هندي',
-                    gender: 'Male',
-                    visa_status: 'Employment Visa (Rayan Engineering)',
-                    basic_salary: 16000.00,
-                    accommodation_allowance: 4000.00,
-                    consolidated_allowance: 0.00,
-                    other_allowance: 16000.00,
-                    bank_name: 'Emirates NBD Bank PJSC',
-                    swift: 'EBILAEADXXX',
-                    iban: 'AE860260001015934645101',
-                    account_no: 'AE860260001015934645101',
-                    default_pay_method: 'AED RAYAN GROUP Host To Host',
-                    project_id: '',
-                    project_name: 'Corporate / General Overhead',
-                    status: 'Active',
-                    eligible_for_rehire: 'yes'
-                  });
-                }
+                liveJson.data.employees = Array.from(empDedup.values());
                 // Sort employees strictly in ascending serial order by employee_no (EN12001, EN12002, EN12003, etc.)
                 liveJson.data.employees.sort((a, b) => {
                   return (a.employee_no || '').localeCompare(b.employee_no || '', undefined, { numeric: true, sensitivity: 'base' });

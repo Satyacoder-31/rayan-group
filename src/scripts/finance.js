@@ -506,7 +506,7 @@ class FinanceApp {
       'aud-001', 'aud-002', 'aud-003', 'aud-004', 'aud-005', 'aud-mvare1wh', 'aud-mvarduee', 'aud-mvhirxz4', 'aud-mvhirxz0', 'aud-mvhirxyp', 'aud-1a14f414ad7'
     ]);
 
-    const isBlacklisted = (item) => {
+    const isBlacklisted = (item, colKey = '') => {
       if (!item) return true;
       const id = String(item.id || '').trim().toLowerCase();
       const name = String(item.name || item.customer_name || '').trim().toLowerCase();
@@ -523,14 +523,17 @@ class FinanceApp {
       if (name.includes('krishna general')) return true;
       if (id.startsWith('item-00')) return true;
 
-      // Strictly purge the other two demo bank accounts (NBAD & Emirates NBD) and old demo FAB
-      if (id === 'bank-nbad-uae' || id === 'bank-enbd-escrow') return true;
-      const bName = String(item.bank_name || '').toLowerCase();
-      if (bName.includes('nbad') || bName.includes('national bank of abu dhabi') || bName.includes('emirates nbd')) {
-        return true;
-      }
-      if (id === 'bank-fab-uae' && !bName.includes('adcb') && !bName.includes('commercial')) {
-        return true;
+      // Strictly purge the demo company bank accounts (NBAD & Emirates NBD escrow / old demo FAB) ONLY from bank_accounts!
+      // NEVER drop employees, payroll slips, cheques, or receipts that happen to mention Emirates NBD / NBAD in bank_name.
+      if (colKey === 'bank_accounts') {
+        if (id === 'bank-nbad-uae' || id === 'bank-enbd-escrow') return true;
+        const bName = String(item.bank_name || '').toLowerCase();
+        if (bName.includes('nbad') || bName.includes('national bank of abu dhabi') || bName.includes('emirates nbd')) {
+          return true;
+        }
+        if (id === 'bank-fab-uae' && !bName.includes('adcb') && !bName.includes('commercial')) {
+          return true;
+        }
       }
 
       return dummyBlacklist.has(id) || dummyBlacklist.has(billNo) || dummyBlacklist.has(vouchNo) || dummyBlacklist.has(dnNo) || dummyBlacklist.has(expNo) || dummyBlacklist.has(poNo) || dummyBlacklist.has(chequeNo) || dummyBlacklist.has(invNo) || dummyBlacklist.has(recNo) || dummyBlacklist.has(refNo);
@@ -541,10 +544,10 @@ class FinanceApp {
         merged.companies = defaultSeedData.companies;
         continue;
       }
-      const seedArr = (merged[key] || []).filter(item => !isBlacklisted(item));
+      const seedArr = (merged[key] || []).filter(item => !isBlacklisted(item, key));
       const incomingRaw = Array.isArray(sourceData[key]) ? sourceData[key] : [];
       const incomingArr = incomingRaw.filter(item => {
-        if (!item || isBlacklisted(item)) return false;
+        if (!item || isBlacklisted(item, key)) return false;
         const no = item.invoice_no || item.receipt_no || item.code || item.id || '';
         if (typeof no === 'string' && ['CUST-LT', 'CUST-EMAAR', 'CUST-NHAI', 'CUST-DPA', 'CUST-YOK', 'CUST-KGC'].includes(no)) {
           return false;
@@ -652,17 +655,33 @@ class FinanceApp {
 
       // Add incoming user items first so newest submissions stay at top
       const map = new Map();
+      const parseTs = (obj) => {
+        const t = obj?.updated_at || obj?.created_at || '';
+        const ms = t ? Date.parse(String(t).replace(' ', 'T')) : 0;
+        return Number.isFinite(ms) ? ms : 0;
+      };
       incomingArr.forEach(item => {
-        if (item && !isBlacklisted(item)) {
+        if (item && !isBlacklisted(item, key)) {
           const uniqueKey = getUniqueKey(item, key) || `item-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
           if (!item.id) item.id = uniqueKey;
-          map.set(uniqueKey, item);
+          if (key === 'employees' && map.has(uniqueKey)) {
+            const prev = map.get(uniqueKey);
+            const prevTs = parseTs(prev);
+            const curTs = parseTs(item);
+            if (curTs >= prevTs) {
+              const mergedEmp = { ...prev, ...item };
+              if (!item.photo && prev.photo && curTs === 0) mergedEmp.photo = prev.photo;
+              map.set(uniqueKey, mergedEmp);
+            }
+          } else {
+            map.set(uniqueKey, item);
+          }
         }
       });
 
       // Enrich existing items with detailed line_items from seed if missing, but NEVER resurrect deleted or edited items!
       seedArr.forEach(item => {
-        if (item && !isBlacklisted(item)) {
+        if (item && !isBlacklisted(item, key)) {
           const uniqueKey = getUniqueKey(item, key);
           if (uniqueKey) {
             const existing = map.get(uniqueKey);
@@ -675,7 +694,7 @@ class FinanceApp {
         }
       });
 
-      merged[key] = Array.from(map.values()).filter(item => !isBlacklisted(item));
+      merged[key] = Array.from(map.values()).filter(item => !isBlacklisted(item, key));
 
       if (key === 'projects') {
         merged.projects = (merged.projects || []).map(p => {
@@ -740,22 +759,29 @@ class FinanceApp {
       merged.settings = { ...merged.settings, ...sourceData.settings };
     }
 
-    const protectedEmpIds = new Set(['emp-mwlpkkbr', 'emp-en12001', 'emp-rg11047']);
-    const isEmpIdDeleted = (id) => id && id.startsWith('emp-') && !protectedEmpIds.has(id);
+    const protectedEmpIds = new Set(['emp-rg11047']);
+    const isEmpIdDeleted = (id) => {
+      const low = String(id || '').trim().toLowerCase();
+      return Boolean(low) && !protectedEmpIds.has(low);
+    };
 
     if (Array.isArray(sourceData.deleted_employee_ids)) {
-      merged.deleted_employee_ids = sourceData.deleted_employee_ids.filter(isEmpIdDeleted);
+      merged.deleted_employee_ids = sourceData.deleted_employee_ids.map(x => String(x || '').trim().toLowerCase()).filter(isEmpIdDeleted);
     }
     const storedDel = (function () {
       try {
         const raw = typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('rayan_fin_deleted_employee_ids') || '[]') : [];
-        return Array.isArray(raw) ? raw.filter(isEmpIdDeleted) : [];
+        return Array.isArray(raw) ? raw.map(x => String(x || '').trim().toLowerCase()).filter(isEmpIdDeleted) : [];
       } catch (e) { return []; }
     })();
     const allDeletedEmps = Array.from(new Set([...(merged.deleted_employee_ids || []), ...storedDel]));
     merged.deleted_employee_ids = allDeletedEmps;
     if (allDeletedEmps.length > 0 && Array.isArray(merged.employees)) {
-      merged.employees = merged.employees.filter(e => !allDeletedEmps.includes(e.id));
+      merged.employees = merged.employees.filter(e => {
+        const eId = String(e?.id || '').trim().toLowerCase();
+        const eNo = String(e?.employee_no || '').trim().toLowerCase();
+        return !allDeletedEmps.includes(eId) && !allDeletedEmps.includes(eNo);
+      });
     }
 
     // Purge sample employee Md Ashraf Ali
@@ -2554,7 +2580,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v200';
+    const CURRENT_DB_VERSION = 'v2026_clean_v201';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.removeItem('rayan_fin_deleted_employee_ids');
@@ -3393,6 +3419,55 @@ class FinanceApp {
       if (this.db.custom_letters) {
         this.db.custom_letters = this.db.custom_letters.filter(x => x.id !== payload.id && x.ref_no !== payload.id);
       }
+      this.saveDatabaseToCache();
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'save_employee' && payload.employee) {
+      if (!Array.isArray(this.db.employees)) this.db.employees = [];
+      const emp = payload.employee;
+      const eIdLow = String(emp.id || '').trim().toLowerCase();
+      const eNoLow = String(emp.employee_no || '').trim().toLowerCase();
+      this.db.employees = this.db.employees.filter(x => {
+        const xId = String(x?.id || '').trim().toLowerCase();
+        const xNo = String(x?.employee_no || '').trim().toLowerCase();
+        return xId !== eIdLow && (!eNoLow || xNo !== eNoLow);
+      });
+      this.db.employees.push(emp);
+      this.db.employees.sort((a, b) => (a.employee_no || '').localeCompare(b.employee_no || '', undefined, { numeric: true, sensitivity: 'base' }));
+      this.saveDatabaseToCache();
+      return { success: true, localOnly: true, data: this.db, employee: emp };
+    }
+    if (action === 'delete_employee' && (payload.id || payload.employee_no)) {
+      const tId = String(payload.id || '').trim().toLowerCase();
+      const tNo = String(payload.employee_no || '').trim().toLowerCase();
+      if (Array.isArray(this.db.employees)) {
+        this.db.employees = this.db.employees.filter(x => {
+          const xId = String(x?.id || '').trim().toLowerCase();
+          const xNo = String(x?.employee_no || '').trim().toLowerCase();
+          return (!tId || (xId !== tId && xNo !== tId)) && (!tNo || (xId !== tNo && xNo !== tNo));
+        });
+      }
+      this.saveDatabaseToCache();
+      return { success: true, localOnly: true, data: this.db };
+    }
+    if (action === 'save_payroll' && payload.payroll) {
+      if (!Array.isArray(this.db.payroll)) this.db.payroll = [];
+      const pay = payload.payroll;
+      const idx = this.db.payroll.findIndex(p => p.id === pay.id);
+      if (idx >= 0) this.db.payroll[idx] = { ...this.db.payroll[idx], ...pay };
+      else this.db.payroll.unshift(pay);
+      this.saveDatabaseToCache();
+      return { success: true, localOnly: true, data: this.db, payroll: pay };
+    }
+    if (action === 'delete_payroll' && (payload.id || payload.slip_no)) {
+      if (Array.isArray(this.db.payroll)) {
+        this.db.payroll = this.db.payroll.filter(p => p.id !== payload.id && p.slip_no !== payload.slip_no && p.slip_no !== payload.id);
+      }
+      this.saveDatabaseToCache();
+      return { success: true, localOnly: true, data: this.db };
+    }
+    if (action === 'disburse_payroll') {
       this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }

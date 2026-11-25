@@ -206,114 +206,34 @@ export function registerPayrollModules(FinanceApp) {
     } else {
       this.db.employees_initialized = true;
 
-      // Ensure Nadeem Akhtar Nazmul Hoda is recognized as EN12001
-      let nadeem = this.db.employees.find(e => e.id === 'emp-mwlpkkbr' || (e.name && e.name.toLowerCase().includes('nadeem')));
-      if (nadeem) {
-        nadeem.employee_no = nadeem.employee_no || 'EN12001';
-        nadeem.name = nadeem.name || 'Nadeem Akhtar Nazmul Hoda';
-        nadeem.name_ar = nadeem.name_ar || 'نديم اختر نظم هدي';
-        nadeem.position = nadeem.position || 'Civil Engineer';
-        nadeem.position_ar = nadeem.position_ar || 'مهندس مدني';
-        nadeem.passport_no = nadeem.passport_no || 'U3566719';
-        nadeem.emirates_id = nadeem.emirates_id || '784-1998-3368120-0';
-        nadeem.phone = nadeem.phone || '+971 555411543';
-        nadeem.email = nadeem.email || 'nadeem.hmsit@gmail.com';
-        nadeem.company_id = nadeem.company_id || this.activeCompanyId || 'rayan-corp-uae';
-      }
-
-      // Bakhteyar Alam Mokhtar Ahmad EN12009
-      const isBakhtDeleted = deleted.includes('emp-en12009') || deleted.includes('en12009');
-      let bakht = this.db.employees.find(e => (e.name && e.name.toLowerCase().includes('bakhteyar')) || (e.employee_no && e.employee_no.toUpperCase() === 'EN12009') || e.id === 'emp-en12009');
-      if (!isBakhtDeleted) {
-        if (!bakht) {
-          bakht = {
-            id: 'emp-en12009',
-            employee_no: 'EN12009',
-            company_id: this.activeCompanyId || 'rayan-corp-uae',
-            name: 'Bakhteyar Alam Mokhtar Ahmad',
-            name_ar: 'بختيار عالم مختار احمد',
-            position: 'Civil Engineer',
-            position_ar: 'مهندس مدني',
-            department: 'Rayan Engineering',
-            date_of_joining: '2025-08-10',
-            date_of_appointment: '2025-08-10',
-            currency: 'AED',
-            phone: '+971528990903',
-            email: 'bakhteyarnke@gmail.com',
-            emirates_id: '784-1996-4684544-8',
-            eid_expiry_date: '2027-08-11',
-            passport_no: 'S3552106',
-            passport_expiry_date: '2028-09-03',
-            nationality: 'India',
-            nationality_ar: 'هندي',
-            gender: 'Male',
-            visa_status: 'Employment Visa (Rayan Engineering)',
-            basic_salary: 16000.00,
-            accommodation_allowance: 4000.00,
-            consolidated_allowance: 0.00,
-            other_allowance: 16000.00,
-            bank_name: 'Emirates NBD Bank PJSC',
-            swift: 'EBILAEADXXX',
-            iban: 'AE860260001015934645101',
-            account_no: 'AE860260001015934645101',
-            default_pay_method: 'AED RAYAN GROUP Host To Host',
-            project_id: '',
-            project_name: 'Corporate / General Overhead',
-            status: 'Active',
-            eligible_for_rehire: 'yes',
-            created_at: '2025-08-07T09:00:00Z',
-            updated_at: new Date().toISOString()
-          };
-          this.db.employees.push(bakht);
-        } else {
-          // Normalize IDs without clobbering user edits (status, custom salary, dates are preserved!)
-          bakht.id = 'emp-en12009';
-          bakht.employee_no = 'EN12009';
-          if (bakht.phone === '+971 50 123 4567' || !bakht.phone) {
-            bakht.phone = '+971528990903';
-          }
-          if (bakht.email === 'bakhteyar@rayan-group.com' || !bakht.email) {
-            bakht.email = 'bakhteyarnke@gmail.com';
-          }
-          if (bakht.project_name && bakht.project_name.includes('Police Academy')) {
-            bakht.project_id = '';
-            bakht.project_name = 'Corporate / General Overhead';
-          }
-          if (bakht.basic_salary === 9500 && bakht.accommodation_allowance === 5500) {
-            bakht.basic_salary = 16000;
-            bakht.accommodation_allowance = 4000;
-            bakht.other_allowance = 16000;
-          }
-        }
-      }
-
-      let shafiur = this.db.employees.find(e => (e.name && e.name.toLowerCase().includes('shafiur')) || e.id === 'emp-en12004');
-      if (shafiur) {
-        shafiur.id = 'emp-en12004';
-        shafiur.employee_no = 'EN12004';
-      }
-
-      // Heal any corrupted cache in employees array
+      // Deduplicate by normalized employee_no/id (keeping newest updated_at & non-empty photo) without overriding user edits
       if (Array.isArray(this.db.employees)) {
+        const parseTs = (obj) => {
+          const t = obj?.updated_at || obj?.created_at || '';
+          const ms = t ? Date.parse(String(t).replace(' ', 'T')) : 0;
+          return Number.isFinite(ms) ? ms : 0;
+        };
+        const dedupedMap = new Map();
         this.db.employees.forEach(e => {
-          if (e.name && e.name.toLowerCase().includes('bakhteyar')) {
-            e.id = 'emp-en12009';
-            if (!e.employee_no || e.employee_no === 'EN12004') e.employee_no = 'EN12009';
-          }
-          if (e.name && e.name.toLowerCase().includes('shafiur')) {
-            e.id = 'emp-en12004';
-            e.employee_no = 'EN12004';
+          if (!e) return;
+          const k = (e.employee_no || e.id || '').trim().toUpperCase();
+          if (!k) return;
+          if (!dedupedMap.has(k)) {
+            dedupedMap.set(k, e);
+          } else {
+            const prev = dedupedMap.get(k);
+            const curTs = parseTs(e);
+            const prevTs = parseTs(prev);
+            if (curTs > prevTs) {
+              const merged = { ...prev, ...e };
+              if (!e.photo && prev.photo) merged.photo = prev.photo;
+              dedupedMap.set(k, merged);
+            } else if (!prev.photo && e.photo) {
+              prev.photo = e.photo;
+            }
           }
         });
-        // Deduplicate to avoid collisions
-        const seen = new Set();
-        this.db.employees = this.db.employees.filter(e => {
-          const k = (e.employee_no || e.id || '').toUpperCase();
-          if (!k) return true;
-          if (seen.has(k)) return false;
-          seen.add(k);
-          return true;
-        });
+        this.db.employees = Array.from(dedupedMap.values());
         this.db.employees.sort((a, b) => (a.employee_no || '').localeCompare(b.employee_no || '', undefined, { numeric: true, sensitivity: 'base' }));
       }
     }
@@ -1289,6 +1209,7 @@ export function registerPayrollModules(FinanceApp) {
 
         const valInput = document.getElementById('fin-emp-photo-val');
         if (valInput) valInput.value = dataUrl;
+        if (window.finApp) window.finApp._empPhotoRemoved = false;
 
         const previewImg = document.getElementById('fin-emp-photo-preview-img');
         const placeholder = document.getElementById('fin-emp-photo-placeholder');
@@ -1306,6 +1227,7 @@ export function registerPayrollModules(FinanceApp) {
   };
 
   proto.removeEmployeePhoto = function () {
+    this._empPhotoRemoved = true;
     const valInput = document.getElementById('fin-emp-photo-val');
     if (valInput) valInput.value = '';
     const fileInput = document.getElementById('fin-emp-photo-input');
@@ -1322,6 +1244,7 @@ export function registerPayrollModules(FinanceApp) {
   };
 
   proto.openEmployeeModal = function (empId = null, fromProfile = false) {
+    this._empPhotoRemoved = false;
     if (fromProfile || document.getElementById('fin-emp-profile-modal-backdrop')) {
       this._editingFromProfileEmpId = empId;
     }
@@ -1810,7 +1733,6 @@ export function registerPayrollModules(FinanceApp) {
       resignation_reason: endReason,
       phone: (formData.get('phone') || '').trim(),
       email: (formData.get('email') || '').trim(),
-      emirates_id: (formData.get('emirates_id') || '').trim(),
       photo: formData.get('photo') || '',
       address: (formData.get('address') || '').trim(),
       local_address: (formData.get('address') || '').trim(),
@@ -1864,21 +1786,15 @@ export function registerPayrollModules(FinanceApp) {
       }
     } catch (e) { }
 
-    // If saving Bakhteyar, ensure id is emp-en12009 and employee_no is EN12009 if left as EN12004
-    if ((empObj.name || '').toLowerCase().includes('bakhteyar')) {
-      if (!empObj.employee_no || empObj.employee_no === 'EN12004') {
-        empObj.employee_no = 'EN12009';
-      }
-      empObj.id = 'emp-en12009';
-      empId = 'emp-en12009';
-    }
-
     if (isEdit) {
       let idx = this.db.employees.findIndex(em => em.id === rawId.trim());
       if (idx < 0) {
         idx = this.db.employees.findIndex(em => em.id === empId || em.employee_no === empObj.employee_no);
       }
       if (idx >= 0) {
+        if (!empObj.photo && !this._empPhotoRemoved && this.db.employees[idx].photo) {
+          empObj.photo = this.db.employees[idx].photo;
+        }
         this.db.employees[idx] = { ...this.db.employees[idx], ...empObj };
       } else {
         this.db.employees.push(empObj);
@@ -1886,11 +1802,15 @@ export function registerPayrollModules(FinanceApp) {
     } else {
       const existingIdx = this.db.employees.findIndex(em => em.employee_no === empObj.employee_no || em.id === empObj.id);
       if (existingIdx >= 0) {
+        if (!empObj.photo && !this._empPhotoRemoved && this.db.employees[existingIdx].photo) {
+          empObj.photo = this.db.employees[existingIdx].photo;
+        }
         this.db.employees[existingIdx] = { ...this.db.employees[existingIdx], ...empObj };
       } else {
         this.db.employees.push(empObj);
       }
     }
+    this._empPhotoRemoved = false;
 
     // Deduplicate employees by employee_no so collisions never persist
     const seenEmpNos = new Set();
@@ -2249,9 +2169,9 @@ export function registerPayrollModules(FinanceApp) {
                   <span style="font-size:0.65rem; color:#38bdf8; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); padding:1px 6px; border-radius:4px; font-weight:700;">✏️ Edit</span>
                 </div>
                 <div style="font-size:1.35rem; font-weight:800; color:#38bdf8; margin-top:3px;">
-                  ${this.formatCurrency(acc + oth)}
+                  ${this.formatCurrency(acc + cons + oth)}
                 </div>
-                <div style="font-size:0.68rem; color:#64748b;">Acc: ${this.formatCurrency(acc)} ${oth > 0 ? `• Oth: ${this.formatCurrency(oth)}` : ''}</div>
+                <div style="font-size:0.68rem; color:#64748b;">Acc: ${this.formatCurrency(acc)} ${(cons + oth) > 0 ? `• Oth: ${this.formatCurrency(cons + oth)}` : ''}</div>
               </div>
 
               <div onclick="window.finApp.openQuickSalaryModal('${emp.id}')" style="background:linear-gradient(135deg, rgba(16,185,129,0.14) 0%, rgba(15,23,42,0.6) 100%); border:1px solid rgba(16,185,129,0.45); border-radius:12px; padding:1rem; cursor:pointer; position:relative; transition:all 0.15s ease;" onmouseover="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 15px rgba(16,185,129,0.3)';" onmouseout="this.style.borderColor='rgba(16,185,129,0.45)'; this.style.boxShadow='none';" title="Click to change or adjust total remuneration">
@@ -2262,8 +2182,6 @@ export function registerPayrollModules(FinanceApp) {
                 <div style="font-size:1.45rem; font-weight:800; color:#10b981; margin-top:3px;">
                   ${this.formatCurrency(standardMonthly)}
                 </div>
-                <div style="font-size:0.68rem; color:#94a3b8;">Total remuneration per cycle</div>
-              </div>
                 <div style="font-size:0.68rem; color:#94a3b8;">Total remuneration per cycle</div>
               </div>
 
@@ -2833,6 +2751,15 @@ export function registerPayrollModules(FinanceApp) {
     } catch (err) {
       console.warn('Salary backend sync warning:', err);
     }
+
+    // Ensure profile & directory reflect updated state after backend sync
+    if (document.getElementById('fin-emp-profile-modal-backdrop')) {
+      this.openEmployeeProfileModal(emp.id);
+    }
+    if (this.activeTab === 'employees') {
+      const root = document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container');
+      if (root) this.renderEmployeesTab(root);
+    }
   };
 
   proto.printEmployeeProfile = function (empId) {
@@ -3364,8 +3291,13 @@ export function registerPayrollModules(FinanceApp) {
 
     // Determine target employee
     let targetEmp = null;
-    if (slip?.employee_id) {
-      targetEmp = employees.find(e => e.id === slip.employee_id || e.employee_no === slip.employee_id);
+    if (slip?.employee_id || slip?.employee_no) {
+      const sIdLow = String(slip.employee_id || '').trim().toLowerCase();
+      const sNoLow = String(slip.employee_no || '').trim().toLowerCase();
+      targetEmp = employees.find(e =>
+        (sIdLow && (String(e.id || '').toLowerCase() === sIdLow || String(e.employee_no || '').toLowerCase() === sIdLow)) ||
+        (sNoLow && String(e.employee_no || '').toLowerCase() === sNoLow)
+      );
     } else if (empId) {
       targetEmp = employees.find(e => e.id === empId || e.employee_no === empId || (e.name && e.name.toLowerCase() === (empId || '').toLowerCase()));
     } else if (activeEmployees.length > 0) {
@@ -3822,7 +3754,7 @@ export function registerPayrollModules(FinanceApp) {
     const payDate = formData.get('payment_date') || new Date().toISOString().split('T')[0];
     const userSlipNo = (formData.get('slip_no') || '').trim();
     const slipNo = userSlipNo || `PS${periodLabel.replace(/\s+/g, '')}/${emp ? emp.employee_no : 'EN'}`;
-    const payRef = (formData.get('payout_reference') || '').trim() || `TXN-PAYROLL-${payDate.replace(/-/g, '')}-${emp ? emp.employee_no : 'EN'}`;
+    const payRef = (formData.get('payout_reference') || formData.get('reference_notes') || '').trim() || `TXN-PAYROLL-${payDate.replace(/-/g, '')}-${emp ? emp.employee_no : 'EN'}`;
 
     const slipObj = {
       id: slipId,
@@ -4310,12 +4242,15 @@ export function registerPayrollModules(FinanceApp) {
             id: `cv-${Date.now()}`,
             voucher_no: cvNo,
             company_id: slip.company_id || 'rayan-corp-uae',
+            register_id: reg.id,
             cash_in_hand_id: reg.id,
             register_name: reg.register_name,
+            custodian: reg.custodian || 'Arshad Alam Shaikh',
             voucher_date: slip.payment_date || new Date().toISOString().split('T')[0],
             date: slip.payment_date || new Date().toISOString().split('T')[0],
             type: 'outflow',
             category: 'Salary & Labor Payout',
+            payee: slip.employee_name,
             party_name: slip.employee_name,
             amount: net,
             currency: slip.currency || 'AED',
