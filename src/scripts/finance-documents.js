@@ -20,6 +20,23 @@ export function registerDocumentModules(FinanceApp) {
   };
   proto.escapeHtml = escapeHtml;
 
+  const getNextSequenceNumber = (items, fields, minBase) => {
+    let maxNum = minBase;
+    (Array.isArray(items) ? items : []).forEach(item => {
+      if (!item) return;
+      for (const f of fields) {
+        const val = String(item[f] || '').trim();
+        const m = val.match(/(\d+)\s*$/);
+        if (m) {
+          const n = parseInt(m[1], 10);
+          if (Number.isFinite(n) && n > maxNum) maxNum = n;
+          break;
+        }
+      }
+    });
+    return maxNum + 1;
+  };
+
   // ==========================================================================
   // CUSTOM MODAL CONTROLS (SHOW & CLOSE MODAL DIALOGS)
   // ==========================================================================
@@ -1011,7 +1028,7 @@ export function registerDocumentModules(FinanceApp) {
       cert = (this.db?.work_completion_certificates || []).find(c => c.id === certId || c.cert_no === certId);
     }
     if (!cert) {
-      const nextNum = (this.db?.work_completion_certificates || []).length + 11020;
+      const nextNum = getNextSequenceNumber(this.db?.work_completion_certificates, ['cert_no', 'reference_no'], 11000);
       cert = {
         id: `wcc-${Date.now()}`,
         cert_no: `REC-JOB COM-${nextNum}`,
@@ -1300,7 +1317,7 @@ export function registerDocumentModules(FinanceApp) {
       dn = (this.db?.delivery_notes || []).find(n => n.id === dnId || n.dn_no === dnId);
     }
     if (!dn) {
-      const nextNum = (this.db?.delivery_notes || []).length + 1001;
+      const nextNum = getNextSequenceNumber(this.db?.delivery_notes, ['dn_no'], 1000);
       dn = {
         id: `dn-${Date.now()}`,
         dn_no: `DN-REC-${nextNum}`,
@@ -1635,7 +1652,7 @@ export function registerDocumentModules(FinanceApp) {
       ult = (this.db?.undertaking_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
     }
     if (!ult) {
-      const nextNum = (this.db?.undertaking_letters || []).length + 11006;
+      const nextNum = getNextSequenceNumber(this.db?.undertaking_letters, ['ref_no', 'reference_no'], 11005);
       ult = {
         id: `ult-${Date.now()}`,
         ref_no: `REC-RG-ULT-${nextNum}`,
@@ -1948,7 +1965,7 @@ export function registerDocumentModules(FinanceApp) {
       ltr = (this.db?.custom_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
     }
     if (!ltr) {
-      const nextNum = (this.db?.custom_letters || []).length + 101;
+      const nextNum = getNextSequenceNumber(this.db?.custom_letters, ['ref_no', 'reference_no'], 100);
       ltr = {
         id: `let-${Date.now()}`,
         ref_no: `REC-LTR-2026-${nextNum}`,
