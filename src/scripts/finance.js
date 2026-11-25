@@ -12398,20 +12398,16 @@ class FinanceApp {
                 <col style="width:50%;">
               </colgroup>
               <tr>
-                <!-- Left Column: Rayan Engineering Signatory with authentic stamp and signature -->
+                <!-- Left Column: Rayan Engineering Signatory with signature first and corner stamp -->
                 <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
                   <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                     ${compName}
                   </div>
-                  <div id="po-stamp-signature-wrap" class="fin-stamp-sign-container" style="position:relative; width:180px; height:74px; margin:0 auto; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
-                    <!-- Circular Rayan Official Stamp -->
-                    <img src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1;">
-                    <!-- Arshad Alam Shaikh Authentic Signature -->
-                    <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:30px; top:10px; width:125px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2;">
-                  </div>
-                  <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
-                  <div style="font-size:0.64rem; font-weight:800; color:#111827;">Authorised Signatory</div>
-                  <div style="font-size:0.58rem; color:#4b5563;">Arshad Alam Shaikh</div>
+                  ${this.renderSignatureStampBlock({
+                    wrapId: 'po-stamp-signature-wrap',
+                    title: 'Authorised Signatory',
+                    subtitle: 'Arshad Alam Shaikh'
+                  })}
                 </td>
 
                 <!-- Right Column: Issuing Client Acknowledgment -->
@@ -23275,18 +23271,16 @@ class FinanceApp {
                   <col style="width:50%;">
                 </colgroup>
                 <tr>
-                  <!-- Left Column: Rayan Engineering Signatory with authentic stamp and signature -->
+                  <!-- Left Column: Rayan Engineering Signatory with signature first and corner stamp -->
                   <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
                     <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                       ${compName}
                     </div>
-                    <div style="position:relative; width:180px; height:74px; margin:0 auto;">
-                      <img src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1;">
-                      <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:30px; top:10px; width:125px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2;">
-                    </div>
-                    <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
-                    <div style="font-size:0.64rem; font-weight:800; color:#111827;">Authorised Signatory</div>
-                    <div style="font-size:0.58rem; color:#4b5563;">Arshad Alam Shaikh</div>
+                    ${this.renderSignatureStampBlock({
+                      wrapId: 'vpo-stamp-signature-wrap',
+                      title: 'Authorised Signatory',
+                      subtitle: 'Arshad Alam Shaikh'
+                    })}
                   </td>
 
                   <!-- Right Column: Vendor Acknowledgment -->
@@ -27584,18 +27578,16 @@ Scope of Work & Technical Execution:
                   <col style="width:50%;">
                 </colgroup>
                 <tr>
-                  <!-- Left Column: Rayan Engineering Signatory with authentic stamp and signature -->
+                  <!-- Left Column: Rayan Engineering Signatory with signature first and corner stamp -->
                   <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
                     <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                       ${compName}
                     </div>
-                    <div style="position:relative; width:180px; height:74px; margin:0 auto;">
-                      <img src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1;">
-                      <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:30px; top:10px; width:125px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2;">
-                    </div>
-                    <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
-                    <div style="font-size:0.64rem; font-weight:800; color:#111827;">Authorised Signatory</div>
-                    <div style="font-size:0.58rem; color:#4b5563;">Arshad Alam Shaikh &bull; Corporate Treasury</div>
+                    ${this.renderSignatureStampBlock({
+                      wrapId: 'transfer-stamp-signature-wrap',
+                      title: 'Authorised Signatory',
+                      subtitle: 'Arshad Alam Shaikh &bull; Corporate Treasury'
+                    })}
                   </td>
 
                   <!-- Right Column: Interbank Settlement Verification -->
@@ -28590,18 +28582,16 @@ Scope of Work & Technical Execution:
                     <div style="font-size:0.58rem; color:#4b5563;">${v.custodian || 'Site Administrator'}</div>
                   </td>
 
-                  <!-- Right Column: Rayan Engineering Signatory with authentic stamp and signature -->
+                  <!-- Right Column: Rayan Engineering Signatory with signature first and corner stamp -->
                   <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
                     <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                       ${compName}
                     </div>
-                    <div style="position:relative; width:180px; height:74px; margin:0 auto;">
-                      <img src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1;">
-                      <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:30px; top:10px; width:125px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2;">
-                    </div>
-                    <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
-                    <div style="font-size:0.64rem; font-weight:800; color:#111827;">Authorised Signatory</div>
-                    <div style="font-size:0.58rem; color:#4b5563;">Arshad Alam Shaikh &bull; Managing Director</div>
+                    ${this.renderSignatureStampBlock({
+                      wrapId: 'vault-stamp-signature-wrap',
+                      title: 'Authorised Signatory',
+                      subtitle: 'Arshad Alam Shaikh &bull; Managing Director'
+                    })}
                   </td>
                 </tr>
               </table>
@@ -29752,6 +29742,59 @@ Scope of Work & Technical Execution:
   getRayanSignatureImg(type = 'default') {
     const src = type === 'receipt' ? '/assets/docs/rayan-signature-receipt.png' : '/assets/docs/rayan-signature-official.png';
     return `<img src="${src}" alt="Authorised Signature" class="rayan-real-signature">`;
+  }
+
+  /**
+   * Renders the corporate Signature-First + Corner-Stamp block:
+   * signature sits on the left above signatory labels, with the round official stamp placed at the right corner.
+   */
+  renderSignatureStampBlock(opts = {}) {
+    const {
+      wrapId = 'fin-stamp-signature-wrap',
+      sigId = '',
+      stampId = '',
+      sigSrc = '/assets/docs/rayan-signature-official.png',
+      sigAlt = 'Authorised Signatory Signature',
+      stampSrc = '/assets/docs/rayan-stamp-official.png',
+      stampAlt = 'Rayan Official Stamp',
+      title = 'Authorised Signatory',
+      subtitle = 'Arshad Alam Shaikh',
+      arabicTitle = '',
+      arabicSubtitle = '',
+      showSig = true,
+      showStamp = true,
+      width = 236,
+      height = 58,
+      sigWidth = 118,
+      sigLeft = 18,
+      stampSize = 86,
+      stampRight = 2,
+      stampTop = -4,
+      center = true,
+      showDivider = true,
+      editable = false
+    } = opts;
+
+    const editAttr = editable ? ' contenteditable="true" spellcheck="false"' : '';
+    const sigIdAttr = sigId ? ` id="${sigId}"` : '';
+    const stampIdAttr = stampId ? ` id="${stampId}"` : '';
+    const leftAreaW = Math.max(135, width - stampSize + 4);
+
+    return `
+      <div style="position:relative; width:${width}px; max-width:100%; margin:${center ? '2px auto 0 auto' : '2px 0 0 0'}; text-align:left;">
+        <div id="${wrapId}" class="fin-stamp-sign-container" style="position:relative; width:${width}px; height:${height}px; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp &amp; signature">
+          ${showSig ? `<img${sigIdAttr} src="${sigSrc}" alt="${escapeHtml(sigAlt)}" style="position:absolute; left:${sigLeft}px; bottom:1px; width:${sigWidth}px; max-height:${height - 4}px; object-fit:contain; mix-blend-mode:multiply; opacity:0.96; pointer-events:none; z-index:2; transition:opacity 0.2s;">` : ''}
+          ${showStamp ? `<img${stampIdAttr} src="${stampSrc}" alt="${escapeHtml(stampAlt)}" style="position:absolute; right:${stampRight}px; top:${stampTop}px; width:${stampSize}px; height:${stampSize}px; object-fit:contain; mix-blend-mode:multiply; opacity:0.96; pointer-events:none; z-index:1; transition:opacity 0.2s;">` : ''}
+        </div>
+        <div style="width:${leftAreaW}px; text-align:center; position:relative; z-index:3;">
+          ${showDivider ? `<div style="border-top:1.5px solid #111827; width:${Math.min(144, leftAreaW - 6)}px; margin:2px auto 2px auto;"></div>` : ''}
+          ${arabicTitle ? `<div${editAttr} style="font-family:'Amiri', serif; font-size:0.84rem; font-weight:700; color:#0f172a; line-height:1.15;">${arabicTitle}</div>` : ''}
+          ${title ? `<div${editAttr} style="font-size:0.65rem; font-weight:800; color:#111827; line-height:1.2;">${title}</div>` : ''}
+          ${arabicSubtitle ? `<div${editAttr} style="font-family:'Amiri', serif; font-size:0.66rem; font-weight:700; color:#475569; line-height:1.15;">${arabicSubtitle}</div>` : ''}
+          ${subtitle ? `<div${editAttr} style="font-size:0.59rem; color:#4b5563; line-height:1.2;">${subtitle}</div>` : ''}
+        </div>
+      </div>
+    `;
   }
 
   getRayanWatermark() {
@@ -31629,20 +31672,16 @@ Scope of Work & Technical Execution:
                 <col style="width:50%;">
               </colgroup>
               <tr>
-                <!-- Left Column: Buyer Signatory (Rayan Engineering) with perfectly aligned stamp and signature -->
+                <!-- Left Column: Buyer Signatory (Rayan Engineering) with signature first and corner stamp -->
                 <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
                   <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                     ${compName}
                   </div>
-                  <div style="position:relative; width:180px; height:74px; margin:0 auto;">
-                    <!-- Circular Rayan Official Stamp (Complete Full Round Stamp) -->
-                    <img src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1;">
-                    <!-- Arshad Alam Shaikh Authentic Signature (Blended seamlessly into stamp and paper) -->
-                    <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:30px; top:10px; width:125px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2;">
-                  </div>
-                  <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
-                  <div style="font-size:0.64rem; font-weight:800; color:#111827;">Authorised Signatory</div>
-                  <div style="font-size:0.58rem; color:#4b5563;">Arshad Alam Shaikh</div>
+                  ${this.renderSignatureStampBlock({
+                    wrapId: 'po-page2-stamp-signature-wrap',
+                    title: 'Authorised Signatory',
+                    subtitle: 'Arshad Alam Shaikh'
+                  })}
                 </td>
 
                 <!-- Right Column: Supplier Signatory with spacious acceptance stamp box -->

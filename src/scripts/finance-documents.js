@@ -2197,8 +2197,10 @@ export function registerDocumentModules(FinanceApp) {
             #fin-doc-print-modal .fin-document-paper {
               min-height: 0 !important;
               height: auto !important;
-              padding: 6mm 10mm 5mm 10mm !important;
+              padding: 4mm 8mm 3mm 8mm !important;
               margin: 0 auto !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
               page-break-after: avoid !important;
               break-after: avoid !important;
             }
@@ -2266,7 +2268,7 @@ export function registerDocumentModules(FinanceApp) {
 
               <div>
                 <!-- Top 3-Column Corporate Bilingual Header (No cyan strip) -->
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:12px; width:100%; border-bottom:1.5px solid #0f172a; padding-bottom:6px;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.45rem; gap:12px; width:100%; border-bottom:1.5px solid #0f172a; padding-bottom:4px;">
                   <!-- Column 1: Left (Logo, Company, TRN, Dynamic QR/Barcode) -->
                   <div style="flex:0 0 215px; max-width:220px; text-align:left;">
                     <div style="margin-bottom:0.25rem;">
@@ -2374,63 +2376,62 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
                 </div>
 
                 <!-- Two Signature Boxes Side-by-Side (Client & Rayan Engineering Official) -->
-                <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-top:0.6rem; border:1.5px solid #0f172a; border-radius:4px; overflow:hidden; page-break-inside:avoid !important; break-inside:avoid !important;">
+                <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-top:0.45rem; border:1.5px solid #0f172a; border-radius:4px; overflow:hidden; page-break-inside:avoid !important; break-inside:avoid !important;">
                   <colgroup>
                     <col style="width:50%;">
                     <col style="width:50%;">
                   </colgroup>
                   <tr>
                     <!-- Left: Client Signatory -->
-                    <td style="vertical-align:top; padding:10px 14px; border-right:1.5px solid #0f172a; background:#fcfdfe;">
-                      <div style="font-size:0.75rem; font-weight:800; color:#0f172a; margin-bottom:2px;" contenteditable="true" spellcheck="false">
+                    <td style="vertical-align:top; padding:7px 10px; border-right:1.5px solid #0f172a; background:#fcfdfe;">
+                      <div style="font-size:0.74rem; font-weight:800; color:#0f172a; margin-bottom:2px;" contenteditable="true" spellcheck="false">
                         ${cert.client_name || 'M/S TOP ROCK INTERIORS LLC'}
                       </div>
-                      <div style="font-size:0.68rem; font-weight:700; color:#64748b; margin-bottom:8px;">
+                      <div style="font-size:0.66rem; font-weight:700; color:#64748b; margin-bottom:4px;">
                         Authorized Signatory:
                       </div>
-                      <div style="position:relative; width:180px; height:70px; margin:4px auto; display:flex; align-items:center; justify-content:center;">
-                        <div style="border:1.5px dashed #94a3b8; border-radius:4px; width:170px; height:54px; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:0.58rem; font-weight:700; background:#f8fafc; white-space:nowrap; box-sizing:border-box;">
+                      <div style="position:relative; width:180px; height:60px; margin:2px auto; display:flex; align-items:center; justify-content:center;">
+                        <div style="border:1.5px dashed #94a3b8; border-radius:4px; width:170px; height:48px; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:0.58rem; font-weight:700; background:#f8fafc; white-space:nowrap; box-sizing:border-box;">
                           [ Acceptance &amp; Official Stamp ]
                         </div>
                       </div>
-                      <div style="border-top:1.5px solid #111827; width:160px; margin:4px auto 3px auto;"></div>
-                      <div style="font-size:0.68rem; font-weight:800; color:#111827; text-align:center;" contenteditable="true" spellcheck="false">Client Representative</div>
-                      <div style="font-size:0.60rem; color:#64748b; text-align:center;">Signature &amp; Stamp</div>
+                      <div style="border-top:1.5px solid #111827; width:155px; margin:3px auto 2px auto;"></div>
+                      <div style="font-size:0.66rem; font-weight:800; color:#111827; text-align:center;" contenteditable="true" spellcheck="false">Client Representative</div>
+                      <div style="font-size:0.59rem; color:#64748b; text-align:center;">Signature &amp; Stamp</div>
                     </td>
 
-                    <!-- Right: Rayan Engineering Signatory with Official Circular Stamp & Arshad Alam Shaikh Signature -->
-                    <td style="vertical-align:top; padding:10px 14px; background:#ffffff;">
-                      <div style="font-size:0.75rem; font-weight:800; color:#0f172a; margin-bottom:2px;" contenteditable="true" spellcheck="false">
+                    <!-- Right: Rayan Engineering Signatory with Signature First & Official Corner Stamp -->
+                    <td style="vertical-align:top; padding:7px 10px; background:#ffffff;">
+                      <div style="font-size:0.74rem; font-weight:800; color:#0f172a; margin-bottom:2px;" contenteditable="true" spellcheck="false">
                         RAYAN ENGINEERING AND CONTRACTING LLC SPC
                       </div>
-                      <div style="font-size:0.68rem; font-weight:700; color:#64748b; margin-bottom:4px;">
+                      <div style="font-size:0.66rem; font-weight:700; color:#64748b; margin-bottom:2px;">
                         Authorized Signatory:
                       </div>
-                      <div id="wcc-stamp-sign-wrap" class="fin-stamp-sign-container" style="position:relative; width:180px; height:74px; margin:0 auto; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
-                        <!-- Circular Rayan Official Stamp (Complete Full Round Stamp) -->
-                        <img src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1; transition:opacity 0.2s;">
-                        <!-- Arshad Alam Shaikh Authentic Signature -->
-                        <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:30px; top:10px; width:125px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2; transition:opacity 0.2s;">
-                      </div>
-                      <div style="border-top:1.5px solid #111827; width:160px; margin:4px auto 3px auto;"></div>
-                      <div style="font-size:0.68rem; font-weight:800; color:#111827; text-align:center;" contenteditable="true" spellcheck="false">Authorised Signatory</div>
-                      <div style="font-size:0.60rem; color:#64748b; text-align:center;" contenteditable="true" spellcheck="false">Arshad Alam Shaikh &bull; Managing Director</div>
+                      ${this.renderSignatureStampBlock ? this.renderSignatureStampBlock({
+                        wrapId: 'wcc-stamp-sign-wrap',
+                        title: 'Authorised Signatory',
+                        subtitle: 'Arshad Alam Shaikh &bull; Managing Director',
+                        showSig: cert.include_signature !== false,
+                        showStamp: cert.include_stamp !== false,
+                        editable: true
+                      }) : ''}
                     </td>
                   </tr>
                 </table>
               </div>
 
               <!-- Bottom Section Pushed Down to Page Bottom (Notes, Best Wishes, System Footer) -->
-              <div style="margin-top:auto; padding-top:0.75rem;">
+              <div style="margin-top:auto; padding-top:0.45rem;">
                 <!-- Record Keeping Notice -->
-                <div style="border-top:1px solid #111827; border-bottom:1px solid #111827; padding:4px 0; margin-bottom:0.65rem; font-size:0.72rem; font-weight:700; color:#111827;">
+                <div style="border-top:1px solid #111827; border-bottom:1px solid #111827; padding:3px 0; margin-bottom:0.4rem; font-size:0.70rem; font-weight:700; color:#111827;">
                   Please keep a copy of this Work Completion Certificate for your records
                 </div>
 
                 <!-- Best Wishes & Contacts (Matching Sales Invoice Format) -->
-                <div style="font-size:0.75rem; line-height:1.45; color:#4b5563; margin-bottom:0.75rem;">
-                  <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
-                  <div style="font-weight:700; color:#111827; margin-bottom:2px;">RAYAN Group Team</div>
+                <div style="font-size:0.70rem; line-height:1.35; color:#4b5563; margin-bottom:0.45rem;">
+                  <div style="color:#111827; margin-bottom:1px;">Best wishes</div>
+                  <div style="font-weight:700; color:#111827; margin-bottom:1px;">RAYAN Group Team</div>
                   <div>Abu Dhabi, U.A.E</div>
                   <div>Hotline : +971 2 565 4497</div>
                   <div><a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:underline;">info@rayan-group.com</a></div>
@@ -2438,7 +2439,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
                 </div>
 
                 <!-- Clean Fixed System Generated Footer Below the Line -->
-                <div style="padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+                <div style="padding-top:0.35rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.66rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
                   <div style="min-width:60px; font-weight:600; color:#9ca3af;">${cert.cert_no || cert.reference_no || 'REC-JOB COM-11021'}</div>
                   <div style="flex:1; text-align:center; letter-spacing:0.01em; font-weight:500;">
                     This is a system-generated Work Completion Certificate.
@@ -3019,26 +3020,29 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
                 </tbody>
               </table>
 
-              <!-- Sign-off Block -->
-              <div style="font-size:0.86rem; color:#111827; line-height:1.6; margin-top:1.5rem;">
-                <div style="font-weight:700; margin-bottom:8px;">Truly</div>
-                <div style="font-weight:700;">Responsible Person: <strong>${ult.responsible_person || 'Eng. Bakhteyar Alam'}</strong></div>
-                <div style="font-weight:700; margin-bottom:12px;">Designation: <strong>${ult.designation || 'Construction Manager'}</strong></div>
-
-                <div style="display:flex; align-items:flex-start; gap:2.5rem; margin-top:1rem;">
-                  <div>
-                    <div style="font-size:0.78rem; font-weight:700; color:#475569; margin-bottom:4px;">Signature</div>
-                    ${ult.include_signature !== false ? `
-                      <img src="/assets/docs/rayan-signature-construction.png" alt="Signature" style="height:65px; width:auto; display:block; filter:contrast(1.2);">
-                    ` : ''}
-                  </div>
-                  <div>
-                    <div style="font-size:0.78rem; font-weight:700; color:#475569; margin-bottom:4px;">Company Stamp</div>
-                    ${ult.include_stamp !== false ? `
-                      <img src="/assets/docs/rayan-stamp-round.png" alt="Company Stamp" style="height:90px; width:auto; display:block; filter:contrast(1.2);">
-                    ` : ''}
-                  </div>
-                </div>
+              <!-- Sign-off Block (Signature First + Official Round Stamp at Corner) -->
+              <div style="font-size:0.86rem; color:#111827; line-height:1.5; margin-top:1.25rem;">
+                <div style="font-weight:700; margin-bottom:6px;">Truly,</div>
+                ${this.renderSignatureStampBlock ? this.renderSignatureStampBlock({
+                  wrapId: 'ult-stamp-sign-wrap',
+                  sigSrc: '/assets/docs/rayan-signature-construction.png',
+                  sigAlt: 'Responsible Signatory Signature',
+                  stampSrc: '/assets/docs/rayan-stamp-round.png',
+                  stampAlt: 'Company Official Stamp',
+                  title: escapeHtml(ult.responsible_person || 'Eng. Bakhteyar Alam'),
+                  subtitle: escapeHtml(ult.designation || 'Construction Manager'),
+                  showSig: ult.include_signature !== false,
+                  showStamp: ult.include_stamp !== false,
+                  center: false,
+                  width: 260,
+                  height: 64,
+                  sigWidth: 122,
+                  sigLeft: 12,
+                  stampSize: 90,
+                  stampRight: 2,
+                  stampTop: -6,
+                  editable: true
+                }) : ''}
               </div>
             </div>
 
@@ -3228,16 +3232,27 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
                   <div>
                     <div style="font-size:0.76rem; font-weight:800; color:#111827;">DISPATCHED BY (مرسل من):</div>
                     <div style="font-size:0.78rem; color:#475569; margin-top:2px;">RAYAN ENGINEERING &amp; CONTRACTING</div>
-                    <div style="font-size:0.75rem; color:#64748b;">${dn.dispatched_by || 'Storekeeper / Logistics Officer'}</div>
                   </div>
-                  <div id="dn-stamp-sign-wrap" class="fin-stamp-sign-container" style="display:flex; align-items:center; gap:12px; min-height:55px; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
-                    ${dn.include_signature !== false ? `
-                      <img src="/assets/docs/rayan-signature-construction.png" alt="Signature" style="height:48px; width:auto; display:block; transition:opacity 0.2s;">
-                    ` : ''}
-                    ${dn.include_stamp !== false ? `
-                      <img src="/assets/docs/rayan-stamp-round.png" alt="Stamp" style="height:65px; width:auto; display:block; transition:opacity 0.2s;">
-                    ` : ''}
-                  </div>
+                  ${this.renderSignatureStampBlock ? this.renderSignatureStampBlock({
+                    wrapId: 'dn-stamp-sign-wrap',
+                    sigSrc: '/assets/docs/rayan-signature-construction.png',
+                    sigAlt: 'Dispatched By Signature',
+                    stampSrc: '/assets/docs/rayan-stamp-round.png',
+                    stampAlt: 'Company Stamp',
+                    title: escapeHtml(dn.dispatched_by || 'Storekeeper / Logistics Officer'),
+                    subtitle: 'Authorised Signatory',
+                    showSig: dn.include_signature !== false,
+                    showStamp: dn.include_stamp !== false,
+                    center: false,
+                    width: 230,
+                    height: 52,
+                    sigWidth: 110,
+                    sigLeft: 10,
+                    stampSize: 78,
+                    stampRight: 2,
+                    stampTop: -4,
+                    editable: true
+                  }) : ''}
                 </div>
 
                 <!-- Received By -->
@@ -3392,21 +3407,30 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
                 ${ltr.body_text}
               </div>
 
-              <!-- Sign-off Block with Stamp & Signature -->
+              <!-- Sign-off Block with Signature First & Official Stamp at Corner -->
               <div style="font-size:0.88rem; color:#111827; line-height:1.5; margin-top:1.5rem;">
                 <div>Sincerely / With best regards,</div>
                 <div style="font-weight:800; margin-top:4px;">RAYAN ENGINEERING AND CONTRACTING LLC SPC</div>
-                <div style="font-weight:800; color:#1e3a8a; margin-top:2px;">${ltr.signatory_name || 'Eng. Bakhteyar Alam'}</div>
-                <div style="color:#475569; font-size:0.82rem;">${ltr.designation || 'Construction Manager'}</div>
-
-                <div id="ltr-stamp-sign-wrap" class="fin-stamp-sign-container" style="display:flex; align-items:center; gap:20px; margin-top:10px; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
-                  ${ltr.include_signature !== false ? `
-                    <img src="/assets/docs/rayan-signature-construction.png" alt="Signature" style="height:55px; width:auto; display:block; transition:opacity 0.2s;">
-                  ` : ''}
-                  ${ltr.include_stamp !== false ? `
-                    <img src="/assets/docs/rayan-stamp-round.png" alt="Stamp" style="height:80px; width:auto; display:block; transition:opacity 0.2s;">
-                  ` : ''}
-                </div>
+                ${this.renderSignatureStampBlock ? this.renderSignatureStampBlock({
+                  wrapId: 'ltr-stamp-sign-wrap',
+                  sigSrc: '/assets/docs/rayan-signature-construction.png',
+                  sigAlt: 'Authorised Signatory Signature',
+                  stampSrc: '/assets/docs/rayan-stamp-round.png',
+                  stampAlt: 'Company Official Stamp',
+                  title: escapeHtml(ltr.signatory_name || 'Eng. Bakhteyar Alam'),
+                  subtitle: escapeHtml(ltr.designation || 'Construction Manager'),
+                  showSig: ltr.include_signature !== false,
+                  showStamp: ltr.include_stamp !== false,
+                  center: false,
+                  width: 260,
+                  height: 62,
+                  sigWidth: 120,
+                  sigLeft: 12,
+                  stampSize: 88,
+                  stampRight: 2,
+                  stampTop: -6,
+                  editable: true
+                }) : ''}
               </div>
             </div>
 

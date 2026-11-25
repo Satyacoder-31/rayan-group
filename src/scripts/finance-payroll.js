@@ -4838,18 +4838,19 @@ export function registerPayrollModules(FinanceApp) {
                     <div style="font-size:0.58rem; color:#4b5563;">Date: ${escapeHtml(slip.printed_date || '10-Jul-26')}</div>
                   </td>
 
-                  <!-- Right Column: Rayan Engineering Authorised Signatory with stamp & signature -->
+                  <!-- Right Column: Rayan Engineering Authorised Signatory with signature first & corner stamp -->
                   <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
                     <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                       ${compName}
                     </div>
-                    <div id="payslip-stamp-signature-wrap" class="fin-stamp-sign-container" style="position:relative; width:180px; height:74px; margin:0 auto; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide stamp & signature">
-                      <img id="payslip-stamp" src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1; transition:opacity 0.2s;">
-                      <img id="payslip-signature" src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:30px; top:10px; width:125px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2; transition:opacity 0.2s;">
-                    </div>
-                    <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
-                    <div style="font-size:0.64rem; font-weight:800; color:#111827;" contenteditable="true" spellcheck="false" title="Click to edit title">Authorised Signatory</div>
-                    <div style="font-size:0.58rem; color:#4b5563;" contenteditable="true" spellcheck="false" title="Click to edit name">Arshad Alam Shaikh &bull; Managing Director</div>
+                    ${this.renderSignatureStampBlock ? this.renderSignatureStampBlock({
+                      wrapId: 'payslip-stamp-signature-wrap',
+                      sigId: 'payslip-signature',
+                      stampId: 'payslip-stamp',
+                      title: 'Authorised Signatory',
+                      subtitle: 'Arshad Alam Shaikh &bull; Managing Director',
+                      editable: true
+                    }) : ''}
                   </td>
                 </tr>
               </table>
@@ -5490,20 +5491,26 @@ export function registerPayrollModules(FinanceApp) {
                 <div>Tel: +971 2 565 4497 | Abu Dhabi, United Arab Emirates</div>
               </div>
 
-              <!-- Right Side: Official Signatory & People and Culture Stamp -->
-              <div style="text-align:center; min-width:240px; position:relative;">
-                <div id="emp-cert-stamp-sign-wrap" class="fin-stamp-sign-container" style="position:relative; width:240px; height:58px; margin:0 auto; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
-                  <!-- Round People & Culture Stamp -->
-                  <img src="/assets/docs/rayan-people-culture-stamp.png" alt="Rayan Group People & Culture Stamp" style="position:absolute; right:10px; top:-14px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1; transition:opacity 0.2s;">
-                  <!-- Arshad Alam Shaikh Signature -->
-                  <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:16px; top:4px; width:100px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2; transition:opacity 0.2s;">
-                </div>
-                <div style="position:relative; z-index:3;">
-                  <div contenteditable="true" spellcheck="false" style="font-family:'Amiri', serif; font-size:0.86rem; font-weight:700; color:#0f172a; line-height:1.15;" title="Click to edit name (Arabic)">${cert.signatory_name_ar || 'ارشد عالم شيخ'}</div>
-                  <div contenteditable="true" spellcheck="false" style="font-weight:800; font-size:0.75rem; color:#0f172a; line-height:1.15;" title="Click to edit name (English)">${cert.signatory_name || 'Arshad Alam Shaikh'}</div>
-                  <div contenteditable="true" spellcheck="false" style="font-family:'Amiri', serif; font-size:0.68rem; font-weight:700; color:#475569; line-height:1.15;" title="Click to edit title (Arabic)">${cert.signatory_title_ar || 'الرئيس التنفيذي لقطاع الموارد البشرية و الثقافة المؤسسية'}</div>
-                  <div contenteditable="true" spellcheck="false" style="font-weight:700; font-size:0.62rem; color:#475569; line-height:1.15;" title="Click to edit title (English)">${cert.signatory_title || 'Chief Officer of People & Culture'}</div>
-                </div>
+              <!-- Right Side: Signature First + Official People & Culture Stamp at Corner -->
+              <div style="text-align:center; min-width:255px; position:relative;">
+                ${this.renderSignatureStampBlock ? this.renderSignatureStampBlock({
+                  wrapId: 'emp-cert-stamp-sign-wrap',
+                  stampSrc: '/assets/docs/rayan-people-culture-stamp.png',
+                  stampAlt: 'Rayan Group People & Culture Stamp',
+                  arabicTitle: cert.signatory_name_ar || 'ارشد عالم شيخ',
+                  title: cert.signatory_name || 'Arshad Alam Shaikh',
+                  arabicSubtitle: cert.signatory_title_ar || 'الرئيس التنفيذي لقطاع الموارد البشرية و الثقافة المؤسسية',
+                  subtitle: cert.signatory_title || 'Chief Officer of People &amp; Culture',
+                  width: 255,
+                  height: 58,
+                  sigWidth: 112,
+                  sigLeft: 20,
+                  stampSize: 84,
+                  stampRight: 2,
+                  stampTop: -8,
+                  showDivider: true,
+                  editable: true
+                }) : ''}
               </div>
             </div>
 
@@ -6463,20 +6470,25 @@ export function registerPayrollModules(FinanceApp) {
               <div style="border:1px solid #cbd5e1; border-top:3px solid #0284c7; border-radius:4px; padding:6px 10px; background:#ffffff;">
                 <div style="font-weight:800; font-size:0.70rem; color:#0284c7; text-transform:uppercase; margin-bottom:2px;">For RAYAN GROUP (جهة التعيين)</div>
                 <div style="font-size:0.60rem; color:#64748b; margin-bottom:2px;">Authorized Corporate Management</div>
-                
-                <div id="loa-stamp-sign-wrap" class="fin-stamp-sign-container" style="position:relative; width:220px; height:62px; margin:2px 0; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
-                  <!-- Rayan Group Round Stamp -->
-                  <img src="/assets/docs/rayan-group-round-stamp.png" alt="Rayan Group Stamp" style="position:absolute; left:0; top:-12px; width:78px; height:78px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1; transition:opacity 0.2s;">
-                  <!-- Arshad Alam Shaikh Signature -->
-                  <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:22px; top:6px; width:110px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2; transition:opacity 0.2s;">
-                </div>
-                
-                <div style="position:relative; z-index:3;">
-                  <div style="font-family:'Amiri', serif; font-size:0.86rem; font-weight:700; color:#0f172a; line-height:1.15;">${loa.signatory_name_ar || 'ارشد عالم شيخ'}</div>
-                  <div style="font-weight:800; font-size:0.75rem; color:#0f172a; line-height:1.15;">${loa.signatory_name || 'Arshad Alam Shaikh'}</div>
-                  <div style="font-family:'Amiri', serif; font-size:0.68rem; font-weight:700; color:#475569; line-height:1.15;">${loa.signatory_title_ar || 'الرئيس التنفيذي'}</div>
-                  <div contenteditable="true" spellcheck="false" style="font-weight:700; font-size:0.62rem; color:#475569; line-height:1.15;" title="Click to edit title">${loa.signatory_title || 'Chief Executive Officer'}</div>
-                </div>
+                ${this.renderSignatureStampBlock ? this.renderSignatureStampBlock({
+                  wrapId: 'loa-stamp-sign-wrap',
+                  stampSrc: '/assets/docs/rayan-group-round-stamp.png',
+                  stampAlt: 'Rayan Group Stamp',
+                  arabicTitle: loa.signatory_name_ar || 'ارشد عالم شيخ',
+                  title: loa.signatory_name || 'Arshad Alam Shaikh',
+                  arabicSubtitle: loa.signatory_title_ar || 'الرئيس التنفيذي',
+                  subtitle: loa.signatory_title || 'Chief Executive Officer',
+                  center: false,
+                  width: 245,
+                  height: 58,
+                  sigWidth: 112,
+                  sigLeft: 18,
+                  stampSize: 84,
+                  stampRight: 2,
+                  stampTop: -6,
+                  showDivider: true,
+                  editable: true
+                }) : ''}
               </div>
 
               <!-- Right Column: Candidate Acceptance -->
