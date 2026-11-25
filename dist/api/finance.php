@@ -2193,6 +2193,87 @@ function parseProjectSequencePhp($code) {
     return 999999;
 }
 
+function removePayrollLinkedTransactionsPhp(&$db, $pdo, $slipId = '', $slipNo = '') {
+    if (!$db || (empty($slipId) && empty($slipNo))) return;
+
+    $removedCvIds = [];
+    if (!empty($db['cash_vouchers']) && is_array($db['cash_vouchers'])) {
+        $keptCvs = [];
+        foreach ($db['cash_vouchers'] as $cv) {
+            $match = (!empty($slipId) && (($cv['payroll_id'] ?? '') === $slipId || ($cv['id'] ?? '') === ('cv-' . $slipId) || ($cv['id'] ?? '') === ('cv-pay-' . $slipId))) ||
+                     (!empty($slipNo) && (($cv['slip_no'] ?? '') === $slipNo || (stripos($cv['category'] ?? '', 'salary') !== false && strpos($cv['purpose'] ?? '', '(' . $slipNo . ')') !== false)));
+            if ($match) {
+                if (!empty($cv['id'])) $removedCvIds[] = $cv['id'];
+            } else {
+                $keptCvs[] = $cv;
+            }
+        }
+        $db['cash_vouchers'] = $keptCvs;
+    }
+
+    $removedWireIds = [];
+    if (!empty($db['bank_transfers']) && is_array($db['bank_transfers'])) {
+        $keptWires = [];
+        foreach ($db['bank_transfers'] as $bt) {
+            $match = (!empty($slipId) && (($bt['payroll_id'] ?? '') === $slipId || ($bt['id'] ?? '') === ('wire-' . $slipId))) ||
+                     (!empty($slipNo) && (($bt['slip_no'] ?? '') === $slipNo || ((($bt['type_label'] ?? '') === 'Salary & Wage Payout' || strpos($bt['purpose'] ?? '', 'Salary Payout') === 0) && strpos($bt['purpose'] ?? '', '(' . $slipNo . ')') !== false)));
+            if ($match) {
+                if (!empty($bt['id'])) $removedWireIds[] = $bt['id'];
+                // Refund non-ADCB bank balance
+                $srcAcc = $bt['source_account_id'] ?? '';
+                $amt = floatval($bt['amount'] ?? 0);
+                if ($amt > 0 && !empty($srcAcc) && $srcAcc !== 'bank-adcb-uae' && !empty($db['bank_accounts'])) {
+                    foreach ($db['bank_accounts'] as &$ba) {
+                        if (($ba['id'] ?? '') === $srcAcc) {
+                            $ba['balance'] = round(floatval($ba['balance'] ?? 0) + $amt, 2);
+                            break;
+                        }
+                    }
+                    unset($ba);
+                }
+            } else {
+                $keptWires[] = $bt;
+            }
+        }
+        $db['bank_transfers'] = $keptWires;
+    }
+
+    if ($pdo) {
+        foreach ($removedCvIds as $cid) {
+            try { $pdo->prepare("DELETE FROM finance_cash_vouchers WHERE id = ?")->execute([$cid]); } catch (Exception $e) {}
+        }
+        foreach ($removedWireIds as $wid) {
+            try { $pdo->prepare("DELETE FROM finance_bank_transfers WHERE id = ?")->execute([$wid]); } catch (Exception $e) {}
+        }
+    }
+}
+
+function revertLinkedPayrollForTransactionPhp(&$db, $pdo, $tx) {
+    if (!$db || empty($tx) || empty($db['payroll']) || !is_array($db['payroll'])) return;
+    $txPayId = $tx['payroll_id'] ?? '';
+    $txSlipNo = $tx['slip_no'] ?? '';
+    $txPurpose = $tx['purpose'] ?? '';
+
+    foreach ($db['payroll'] as &$p) {
+        $pId = $p['id'] ?? '';
+        $pSlipNo = $p['slip_no'] ?? '';
+        $matched = (!empty($txPayId) && $txPayId === $pId) ||
+                   (!empty($txSlipNo) && $txSlipNo === $pSlipNo) ||
+                   (!empty($pSlipNo) && !empty($txPurpose) && strpos($txPurpose, $pSlipNo) !== false);
+        if ($matched && strtolower($p['status'] ?? '') === 'paid') {
+            $p['status'] = 'Pending';
+            $p['updated_at'] = gmdate('Y-m-d\TH:i:s\Z');
+            if ($pdo && !empty($pId)) {
+                try {
+                    $pdo->prepare("UPDATE finance_payroll SET status = 'Pending', data_json = ?, updated_at = NOW() WHERE id = ?")
+                        ->execute([json_encode($p, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), $pId]);
+                } catch (Exception $e) {}
+            }
+        }
+    }
+    unset($p);
+}
+
 function recalculateAllFinanceBalances(&$data) {
     if (!$data || !is_array($data)) return;
 
@@ -2639,15 +2720,47 @@ function recalculateAllFinanceBalances(&$data) {
     // Synchronize and balance all cash vaults directly from live cash vouchers
     if (!empty($data['cash_in_hand']) && is_array($data['cash_in_hand'])) {
         $vaultMap = [];
+        $vaultHasVouchers = [];
+        $vaultNameToId = [];
+        $primaryUaeVaultId = 'cash-mw5esv3w';
         foreach ($data['cash_in_hand'] as &$cih) {
-            $vaultMap[$cih['id']] = 0.0;
+            $vid = $cih['id'] ?? '';
+            $vaultMap[$vid] = 0.0;
+            $vaultHasVouchers[$vid] = false;
+            if (!empty($cih['register_name'])) {
+                $vaultNameToId[strtolower(trim($cih['register_name']))] = $vid;
+            }
+            if ($vid === 'cash-mw5esv3w' || !empty($cih['is_primary']) || stripos($cih['register_name'] ?? '', 'rayan e-wallet') !== false) {
+                $primaryUaeVaultId = $vid;
+            }
         }
         unset($cih);
         if (!empty($data['cash_vouchers']) && is_array($data['cash_vouchers'])) {
-            foreach ($data['cash_vouchers'] as $vItem) {
-                $regId = $vItem['register_id'] ?? '';
+            foreach ($data['cash_vouchers'] as &$vItem) {
+                $stLower = strtolower(trim($vItem['status'] ?? ''));
+                if ($stLower === 'void' || $stLower === 'cancelled') continue;
+                if (empty($vItem['date']) && !empty($vItem['voucher_date'])) {
+                    $vItem['date'] = $vItem['voucher_date'];
+                }
+
+                $regId = $vItem['register_id'] ?? ($vItem['cash_in_hand_id'] ?? '');
+                if (!$regId && !empty($vItem['register_name'])) {
+                    $regId = $vaultNameToId[strtolower(trim($vItem['register_name']))] ?? '';
+                }
+                if (!$regId) {
+                    $catLow = strtolower(trim($vItem['category'] ?? ''));
+                    $vNoUp = strtoupper(trim($vItem['voucher_no'] ?? ''));
+                    if ((strpos($catLow, 'salary') !== false || strpos($catLow, 'payroll') !== false || strpos($vNoUp, 'TXN-PAYROLL') === 0) && (($vItem['company_id'] ?? 'rayan-corp-uae') === 'rayan-corp-uae')) {
+                        $regId = $primaryUaeVaultId;
+                    }
+                }
+                if ($regId && empty($vItem['register_id'])) {
+                    $vItem['register_id'] = $regId;
+                }
+
                 $vAmt = floatval($vItem['amount'] ?? 0);
                 if (isset($vaultMap[$regId])) {
+                    $vaultHasVouchers[$regId] = true;
                     if (($vItem['type'] ?? '') === 'inflow') {
                         $vaultMap[$regId] += $vAmt;
                     } else {
@@ -2655,17 +2768,18 @@ function recalculateAllFinanceBalances(&$data) {
                     }
                 }
             }
+            unset($vItem);
         }
         foreach ($data['cash_in_hand'] as &$cih) {
             $regId = $cih['id'] ?? '';
-            if ($regId === 'cash-mw5esv3w' || (isset($vaultMap[$regId]) && $vaultMap[$regId] != 0.0)) {
+            if ($regId === 'cash-mw5esv3w' || !empty($vaultHasVouchers[$regId])) {
                 $cih['balance'] = round($vaultMap[$regId] ?? 0.0, 2);
             }
         }
         unset($cih);
     }
 
-    // Synchronize corporate bank accounts (ADCB): Total inward non-cash receipts minus outward disbursements / withdrawals
+    // Synchronize corporate bank accounts (ADCB): Non-cash collections (+ direct cash deposits to ADCB) minus ADCB outward disbursements
     if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
         $bankInward = 0.0;
         if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
@@ -2681,7 +2795,15 @@ function recalculateAllFinanceBalances(&$data) {
         $bankOutward = 0.0;
         if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
             foreach ($data['bank_transfers'] as $t) {
-                if (($t['company_id'] ?? 'rayan-corp-uae') === 'rayan-corp-uae' && ($t['type'] ?? '') !== 'inward') {
+                if (($t['company_id'] ?? 'rayan-corp-uae') !== 'rayan-corp-uae') continue;
+                if (($t['type'] ?? '') === 'inward') {
+                    if (strpos($t['id'] ?? '', 'wire-dep-') === 0 && (empty($t['destination_account_id']) || $t['destination_account_id'] === 'bank-adcb-uae')) {
+                        $bankInward += floatval($t['amount'] ?? 0);
+                    }
+                    continue;
+                }
+                $srcAcc = $t['source_account_id'] ?? '';
+                if (empty($srcAcc) || $srcAcc === 'bank-adcb-uae') {
                     $bankOutward += floatval($t['amount'] ?? 0);
                 }
             }
@@ -11144,22 +11266,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         break;
                     }
                 }
-                if ($deletedTrn && ($deletedTrn['type'] ?? '') === 'bank_to_cash') {
+                if ($deletedTrn) {
+                    revertLinkedPayrollForTransactionPhp($db, $pdo, $deletedTrn);
                     $amt = floatval($deletedTrn['amount'] ?? 0);
                     $srcId = $deletedTrn['source_account_id'] ?? '';
                     $refNo = $deletedTrn['reference_no'] ?? '';
-                    // Refund bank account
-                    if ($amt > 0 && !empty($db['bank_accounts'])) {
+                    if ($amt > 0 && !empty($srcId) && ($deletedTrn['type'] ?? '') !== 'inward' && !empty($db['bank_accounts'])) {
                         foreach ($db['bank_accounts'] as &$ba) {
-                            if (($ba['id'] ?? '') === $srcId) {
-                                $ba['balance'] = floatval($ba['balance'] ?? 0) + $amt;
+                            if (($ba['id'] ?? '') === $srcId && $srcId !== 'bank-adcb-uae') {
+                                $ba['balance'] = round(floatval($ba['balance'] ?? 0) + $amt, 2);
                                 break;
                             }
                         }
                         unset($ba);
                     }
-                    // Delete linked cash voucher
-                    if (!empty($db['cash_vouchers'])) {
+                    if (($deletedTrn['type'] ?? '') === 'bank_to_cash' && !empty($db['cash_vouchers'])) {
                         $db['cash_vouchers'] = array_values(array_filter($db['cash_vouchers'], function($cv) use ($refNo, $deletedTrn) {
                             if (!empty($refNo) && ($cv['reference_no'] ?? '') === $refNo) return false;
                             if (($cv['id'] ?? '') === ('cv-' . ($deletedTrn['id'] ?? '')) || ($cv['wire_id'] ?? '') === ($deletedTrn['id'] ?? '')) return false;
@@ -11167,15 +11288,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             return true;
                         }));
                     }
-                    recalculateAllFinanceBalances($db);
                 }
                 $db['bank_transfers'] = array_values(array_filter($db['bank_transfers'], function($t) use ($targetId) {
                     return ($t['id'] ?? '') !== $targetId && ($t['reference_no'] ?? '') !== $targetId;
                 }));
+                recalculateAllFinanceBalances($db);
                 if ($pdo) {
                     try {
                         $stmt = $pdo->prepare("DELETE FROM finance_bank_transfers WHERE id = ? OR reference_no = ?");
                         $stmt->execute([$targetId, $targetId]);
+                        if ($deletedTrn && !empty($deletedTrn['source_account_id']) && !empty($db['bank_accounts'])) {
+                            foreach ($db['bank_accounts'] as $baSync) {
+                                if (($baSync['id'] ?? '') === $deletedTrn['source_account_id']) {
+                                    $pdo->prepare("UPDATE finance_bank_accounts SET balance = ?, updated_at = NOW() WHERE id = ?")
+                                        ->execute([floatval($baSync['balance'] ?? 0), $baSync['id']]);
+                                }
+                            }
+                        }
                     } catch (Exception $e) {}
                 }
                 $addAuditLog('delete', 'bank_transfer', $targetId, 'Deleted wire transfer ' . $targetId);
@@ -11253,6 +11382,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $prefix = ($cv['company_id'] === 'ashaz-eng-in') ? 'PC-MUM' : 'PC-DXB';
                     $cv['voucher_no'] = $prefix . '-' . rand(100, 999);
                 }
+                if (empty($cv['register_id']) && !empty($cv['cash_in_hand_id'])) {
+                    $cv['register_id'] = $cv['cash_in_hand_id'];
+                }
                 if (!isset($db['cash_vouchers']) || !is_array($db['cash_vouchers'])) $db['cash_vouchers'] = [];
                 array_unshift($db['cash_vouchers'], $cv);
 
@@ -11273,6 +11405,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     unset($vr);
                 }
+                recalculateAllFinanceBalances($db);
+                if ($pdo) {
+                    try {
+                        $stmtCv = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, company_id, register_id, voucher_no, voucher_date, register_name, custodian, payee, purpose, category, amount, currency, type, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                        $stmtCv->execute([
+                            $cv['id'], $cv['company_id'], $cv['register_id'] ?? 'cash-mw5esv3w', $cv['voucher_no'],
+                            $cv['date'] ?? ($cv['voucher_date'] ?? date('Y-m-d')), $cv['register_name'] ?? 'RAYAN E-Wallets',
+                            $cv['custodian'] ?? 'Arshad Alam Shaikh', $cv['payee'] ?? '', $cv['purpose'] ?? '',
+                            $cv['category'] ?? '', $amt, $cv['currency'], $type, $cv['status'] ?? 'Approved',
+                            json_encode($cv, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('create', 'cash_voucher', $cv['voucher_no'] ?? '', 'Recorded petty cash voucher ' . ($cv['voucher_no'] ?? ''));
             }
             break;
@@ -11286,6 +11431,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $deletedCv = $cv;
                         break;
                     }
+                }
+                if ($deletedCv) {
+                    revertLinkedPayrollForTransactionPhp($db, $pdo, $deletedCv);
                 }
                 if ($deletedCv && ($deletedCv['category'] ?? '') === 'Bank Cash Withdrawal / E-Wallet Replenishment') {
                     $amt = floatval($deletedCv['amount'] ?? 0);
@@ -11451,33 +11599,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 unset($existing);
 
-                // Recalculate vault balances
-                if (!empty($db['cash_in_hand'])) {
-                    $vaultMap = [];
-                    foreach ($db['cash_in_hand'] as &$cih) {
-                        $vaultMap[$cih['id']] = 0.0;
-                    }
-                    unset($cih);
-                    foreach ($db['cash_vouchers'] as $vItem) {
-                        $regId = $vItem['register_id'] ?? '';
-                        $amtVal = floatval($vItem['amount'] ?? 0);
-                        $typeVal = $vItem['type'] ?? 'outflow';
-                        if (isset($vaultMap[$regId])) {
-                            if ($typeVal === 'inflow') {
-                                $vaultMap[$regId] += $amtVal;
-                            } else {
-                                $vaultMap[$regId] -= $amtVal;
-                            }
-                        }
-                    }
-                    foreach ($db['cash_in_hand'] as &$cih) {
-                        $regId = $cih['id'] ?? '';
-                        if ($regId === 'cash-mw5esv3w' || (isset($vaultMap[$regId]) && $vaultMap[$regId] != 0.0)) {
-                            $cih['balance'] = round($vaultMap[$regId] ?? 0.0, 2);
-                        }
-                    }
-                    unset($cih);
-                }
+                // Recalculate vault balances uniformly
+                recalculateAllFinanceBalances($db);
 
                 // Persist updated cash voucher directly to MySQL
                 if ($pdo) {
@@ -12382,6 +12505,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($pay['id'])) {
                     $pay['id'] = 'ps-' . round(microtime(true) * 1000);
                 }
+                if (empty($pay['payout_source_type']) && !empty($pay['payment_source_type'])) {
+                    $pay['payout_source_type'] = $pay['payment_source_type'];
+                }
+                if (empty($pay['payout_source_id']) && !empty($pay['payment_source_id'])) {
+                    $pay['payout_source_id'] = $pay['payment_source_id'];
+                }
+                if (empty($pay['payout_source_name']) && !empty($pay['payment_source_name'])) {
+                    $pay['payout_source_name'] = $pay['payment_source_name'];
+                }
+                $pay['payment_source_type'] = $pay['payout_source_type'] ?? 'bank';
+                $pay['payment_source_id'] = $pay['payout_source_id'] ?? '';
+                $pay['payment_source_name'] = $pay['payout_source_name'] ?? '';
+                $pay['updated_at'] = gmdate('Y-m-d\TH:i:s\Z');
+
                 if (!isset($db['payroll']) || !is_array($db['payroll'])) {
                     $db['payroll'] = [];
                 }
@@ -12397,8 +12534,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$found) {
                     array_unshift($db['payroll'], $pay);
                 }
+                if (strtolower($pay['status'] ?? '') !== 'paid') {
+                    removePayrollLinkedTransactionsPhp($db, $pdo, $pay['id'], $pay['slip_no'] ?? '');
+                    recalculateAllFinanceBalances($db);
+                }
                 if ($pdo) {
                     try {
+                        $paySql = (is_string($pay['payment_date'] ?? '') && preg_match('/^\d{4}-\d{2}-\d{2}$/', $pay['payment_date'])) ? $pay['payment_date'] : date('Y-m-d');
                         $stmt = $pdo->prepare("REPLACE INTO finance_payroll (id, slip_no, company_id, employee_id, employee_no, employee_name, month_year, payment_date, basic_salary, accommodation_allowance, consolidated_allowance, overtime_amount, total_earnings, total_deductions, net_pay, payment_method, payment_source_type, payment_source_id, payment_source_name, project_id, project_name, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
                         $stmt->execute([
                             $pay['id'],
@@ -12408,7 +12550,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $pay['employee_no'] ?? '',
                             $pay['employee_name'] ?? '',
                             $pay['month_year'] ?? '',
-                            $pay['payment_date'] ?? date('Y-m-d'),
+                            $paySql,
                             floatval($pay['basic_salary'] ?? 0),
                             floatval($pay['accommodation_allowance'] ?? 0),
                             floatval($pay['consolidated_allowance'] ?? 0),
@@ -12417,13 +12559,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             floatval($pay['total_deductions'] ?? 0),
                             floatval($pay['net_pay'] ?? 0),
                             $pay['pay_method'] ?? '',
-                            $pay['payout_source_type'] ?? '',
-                            $pay['payout_source_id'] ?? '',
-                            $pay['payout_source_name'] ?? '',
+                            $pay['payment_source_type'],
+                            $pay['payment_source_id'],
+                            $pay['payment_source_name'],
                             $pay['project_id'] ?? '',
                             $pay['project_name'] ?? '',
                             $pay['status'] ?? 'Paid',
-                            json_encode($pay)
+                            json_encode($pay, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                         ]);
                     } catch (Exception $e) {
                         error_log("save_payroll DB error: " . $e->getMessage());
@@ -12444,6 +12586,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!empty($targetSlipNo) && !in_array($targetSlipNo, $db['deleted_payroll_ids'])) $db['deleted_payroll_ids'][] = $targetSlipNo;
                 $db['payroll_initialized'] = true;
 
+                removePayrollLinkedTransactionsPhp($db, $pdo, $targetId, $targetSlipNo);
+
                 if (!empty($db['payroll'])) {
                     $db['payroll'] = array_values(array_filter($db['payroll'], function($p) use ($targetId, $targetSlipNo) {
                         $pId = $p['id'] ?? '';
@@ -12451,6 +12595,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         return $pId !== $targetId && $pSlip !== $targetId && $pId !== $targetSlipNo && $pSlip !== $targetSlipNo;
                     }));
                 }
+                recalculateAllFinanceBalances($db);
                 if ($pdo) {
                     try {
                         $stmt = $pdo->prepare("DELETE FROM finance_payroll WHERE id = ? OR slip_no = ?");
@@ -12464,37 +12609,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'disburse_payroll':
             $slipId = $body['slip_id'] ?? ($body['payroll']['id'] ?? '');
             $slipData = $body['payroll'] ?? [];
-            $sourceType = $body['source_type'] ?? ($slipData['payout_source_type'] ?? 'cash');
-            $sourceId = $body['source_id'] ?? ($slipData['payout_source_id'] ?? '');
+            $sourceType = $body['source_type'] ?? ($slipData['payout_source_type'] ?? ($slipData['payment_source_type'] ?? 'cash'));
+            $sourceId = $body['source_id'] ?? ($slipData['payout_source_id'] ?? ($slipData['payment_source_id'] ?? ''));
             $amount = floatval($body['amount'] ?? ($slipData['net_pay'] ?? 0));
+            if ($amount <= 0 && !empty($slipData)) {
+                $amount = max(0.0, floatval($slipData['total_earnings'] ?? 0) - floatval($slipData['total_deductions'] ?? 0));
+            }
             $payoutDate = $body['payment_date'] ?? ($slipData['payment_date'] ?? date('Y-m-d'));
             $payoutRef = $body['payout_reference'] ?? ($slipData['payout_reference'] ?? ('TXN-PAYROLL-' . round(microtime(true) * 1000)));
             $sourceName = $slipData['payout_source_name'] ?? ($sourceType === 'cash' ? 'RAYAN E-Wallets' : 'Abu Dhabi Commercial Bank (ADCB)');
 
+            // Ensure idempotent update: remove any previous cash voucher or bank wire linked to this payslip
+            removePayrollLinkedTransactionsPhp($db, $pdo, $slipId, $slipData['slip_no'] ?? '');
+
             // 2. Deduct from Bank Account or Cash in Hand & record relational transaction
             if ($sourceType === 'cash') {
                 $regName = 'RAYAN E-Wallets';
+                $matchedIdx = -1;
                 if (!empty($db['cash_in_hand'])) {
-                    foreach ($db['cash_in_hand'] as &$c) {
-                        if (($c['id'] ?? '') === $sourceId || stripos($c['register_name'] ?? '', 'e-wallet') !== false) {
-                            $c['balance'] = round(floatval($c['balance'] ?? 0) - $amount, 2);
-                            $regName = $c['register_name'] ?? 'RAYAN E-Wallets';
-                            $sourceId = $c['id'];
+                    foreach ($db['cash_in_hand'] as $idxC => $c) {
+                        if (!empty($sourceId) && ($c['id'] ?? '') === $sourceId) {
+                            $matchedIdx = $idxC;
                             break;
                         }
                     }
-                    unset($c);
+                    if ($matchedIdx < 0) {
+                        foreach ($db['cash_in_hand'] as $idxC => $c) {
+                            if (($c['id'] ?? '') === 'cash-mw5esv3w' || stripos($c['register_name'] ?? '', 'e-wallet') !== false) {
+                                $matchedIdx = $idxC;
+                                break;
+                            }
+                        }
+                    }
+                    if ($matchedIdx >= 0) {
+                        $regName = $db['cash_in_hand'][$matchedIdx]['register_name'] ?? 'RAYAN E-Wallets';
+                        $sourceId = $db['cash_in_hand'][$matchedIdx]['id'];
+                        $db['cash_in_hand'][$matchedIdx]['balance'] = round(floatval($db['cash_in_hand'][$matchedIdx]['balance'] ?? 0) - $amount, 2);
+                    }
                 }
                 $sourceName = $regName;
-                if ($pdo) {
-                    try {
-                        $pdo->prepare("UPDATE finance_cash_in_hand SET balance = balance - ?, updated_at = NOW() WHERE id = ? OR register_name LIKE '%e-wallet%'")->execute([$amount, $sourceId]);
-                    } catch (Exception $e) {}
-                }
 
                 // Create Cash Voucher in db and MySQL with proper register_id & payee columns
                 $cvObj = [
-                    'id' => 'cv-' . round(microtime(true) * 1000),
+                    'id' => !empty($slipId) ? ('cv-' . $slipId) : ('cv-' . round(microtime(true) * 1000)),
+                    'payroll_id' => $slipId,
+                    'slip_no' => $slipData['slip_no'] ?? '',
                     'voucher_no' => $payoutRef,
                     'company_id' => $slipData['company_id'] ?? 'rayan-corp-uae',
                     'register_id' => $sourceId ?: 'cash-mw5esv3w',
@@ -12509,7 +12668,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'party_name' => $slipData['employee_name'] ?? 'Staff',
                     'amount' => $amount,
                     'currency' => $slipData['currency'] ?? 'AED',
-                    'purpose' => 'Salary Payout for ' . ($slipData['month_year'] ?? ($slipData['period_label'] ?? '')) . ' to ' . ($slipData['employee_name'] ?? '') . ' (' . ($slipData['slip_no'] ?? '') . ')',
+                    'purpose' => 'Salary Payout for ' . ($slipData['month_year'] ?? ($slipData['period_label'] ?? 'Payroll')) . ' to ' . ($slipData['employee_name'] ?? '') . ' (' . ($slipData['slip_no'] ?? '') . ')',
                     'status' => 'Approved',
                     'created_at' => date('c')
                 ];
@@ -12534,27 +12693,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } else {
                 $bankName = 'Abu Dhabi Commercial Bank (ADCB)';
+                $matchedBankIdx = -1;
                 if (!empty($db['bank_accounts'])) {
-                    foreach ($db['bank_accounts'] as &$b) {
-                        if (($b['id'] ?? '') === $sourceId || ($b['id'] ?? '') === 'bank-adcb-uae') {
-                            $b['balance'] = round(floatval($b['balance'] ?? 0) - $amount, 2);
-                            $bankName = $b['bank_name'] ?? 'ADCB';
-                            $sourceId = $b['id'];
+                    foreach ($db['bank_accounts'] as $idxB => $b) {
+                        if (!empty($sourceId) && ($b['id'] ?? '') === $sourceId) {
+                            $matchedBankIdx = $idxB;
                             break;
                         }
                     }
-                    unset($b);
+                    if ($matchedBankIdx < 0) {
+                        foreach ($db['bank_accounts'] as $idxB => $b) {
+                            if (($b['id'] ?? '') === 'bank-adcb-uae') {
+                                $matchedBankIdx = $idxB;
+                                break;
+                            }
+                        }
+                    }
+                    if ($matchedBankIdx >= 0) {
+                        $bankName = $db['bank_accounts'][$matchedBankIdx]['bank_name'] ?? 'ADCB';
+                        $sourceId = $db['bank_accounts'][$matchedBankIdx]['id'];
+                        if ($sourceId !== 'bank-adcb-uae') {
+                            $db['bank_accounts'][$matchedBankIdx]['balance'] = round(floatval($db['bank_accounts'][$matchedBankIdx]['balance'] ?? 0) - $amount, 2);
+                        }
+                    }
                 }
                 $sourceName = $bankName;
-                if ($pdo) {
-                    try {
-                        $pdo->prepare("UPDATE finance_bank_accounts SET balance = balance - ?, updated_at = NOW() WHERE id = ?")->execute([$amount, $sourceId]);
-                    } catch (Exception $e) {}
-                }
 
                 // Create Outward Wire Transfer in db and MySQL
                 $wireObj = [
-                    'id' => 'wire-' . round(microtime(true) * 1000),
+                    'id' => !empty($slipId) ? ('wire-' . $slipId) : ('wire-' . round(microtime(true) * 1000)),
+                    'payroll_id' => $slipId,
+                    'slip_no' => $slipData['slip_no'] ?? '',
                     'company_id' => $slipData['company_id'] ?? 'rayan-corp-uae',
                     'reference_no' => $payoutRef,
                     'transfer_date' => $payoutDate,
@@ -12563,11 +12732,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'source_bank' => $bankName,
                     'destination_account_id' => '',
                     'destination_bank' => $slipData['bank_name'] ?? 'Staff Bank',
-                    'counterparty' => ($slipData['employee_name'] ?? '') . ' (' . ($slipData['employee_no'] ?? '') . ')',
+                    'counterparty' => ($slipData['employee_name'] ?? '') . (!empty($slipData['employee_no']) ? ' (' . $slipData['employee_no'] . ')' : ''),
                     'type' => 'outward_wire',
+                    'type_label' => 'Salary & Wage Payout',
                     'amount' => $amount,
                     'currency' => $slipData['currency'] ?? 'AED',
-                    'purpose' => 'Salary Payout for ' . ($slipData['month_year'] ?? ($slipData['period_label'] ?? '')) . ' to ' . ($slipData['employee_name'] ?? '') . ' (' . ($slipData['slip_no'] ?? '') . ')',
+                    'purpose' => 'Salary Payout for ' . ($slipData['month_year'] ?? ($slipData['period_label'] ?? 'Payroll')) . ' to ' . ($slipData['employee_name'] ?? '') . ' (' . ($slipData['slip_no'] ?? '') . ')',
                     'status' => 'Cleared',
                     'created_at' => date('c')
                 ];
@@ -12586,6 +12756,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
+            // Recalculate all vault and ADCB balances from vouchers & transfers before saving
+            recalculateAllFinanceBalances($db);
+
+            // Sync recalculated balances into MySQL relational tables
+            if ($pdo) {
+                if ($sourceType === 'cash' && !empty($db['cash_in_hand'])) {
+                    foreach ($db['cash_in_hand'] as $cihSync) {
+                        if (($cihSync['id'] ?? '') === $sourceId) {
+                            try {
+                                $pdo->prepare("UPDATE finance_cash_in_hand SET balance = ?, last_replenished = ?, data_json = ?, updated_at = NOW() WHERE id = ?")
+                                    ->execute([floatval($cihSync['balance'] ?? 0), $payoutDate, json_encode($cihSync, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), $sourceId]);
+                            } catch (Exception $e) {}
+                        }
+                    }
+                } elseif (!empty($db['bank_accounts'])) {
+                    foreach ($db['bank_accounts'] as $baSync) {
+                        if (($baSync['id'] ?? '') === $sourceId) {
+                            try {
+                                $pdo->prepare("UPDATE finance_bank_accounts SET balance = ?, data_json = ?, updated_at = NOW() WHERE id = ?")
+                                    ->execute([floatval($baSync['balance'] ?? 0), json_encode($baSync, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), $sourceId]);
+                            } catch (Exception $e) {}
+                        }
+                    }
+                }
+            }
+
             // 1 & 3. Mark payslip as Paid in db AND sync full record + actual schema columns into finance_payroll
             $updatedSlip = null;
             if (!isset($db['payroll']) || !is_array($db['payroll'])) $db['payroll'] = [];
@@ -12593,6 +12789,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (($p['id'] ?? '') === $slipId || (!empty($slipData['slip_no']) && ($p['slip_no'] ?? '') === $slipData['slip_no'])) {
                     $p = array_merge($p, $slipData);
                     $p['status'] = 'Paid';
+                    $p['net_pay'] = $amount;
+                    $p['transferred_amount'] = $amount;
                     $p['payment_date'] = $payoutDate;
                     $p['payout_source_type'] = $sourceType;
                     $p['payout_source_id'] = $sourceId;
@@ -12601,6 +12799,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $p['payment_source_type'] = $sourceType;
                     $p['payment_source_id'] = $sourceId;
                     $p['payment_source_name'] = $sourceName;
+                    $p['pay_method'] = ($sourceType === 'cash') ? ($sourceName . ' / Cash') : ($sourceName . ' (Wire)');
                     $p['updated_at'] = gmdate('Y-m-d\TH:i:s\Z');
                     $updatedSlip = $p;
                     break;
@@ -12610,6 +12809,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$updatedSlip && !empty($slipData)) {
                 $slipData['id'] = $slipId ?: ('ps-' . round(microtime(true) * 1000));
                 $slipData['status'] = 'Paid';
+                $slipData['net_pay'] = $amount;
+                $slipData['transferred_amount'] = $amount;
                 $slipData['payment_date'] = $payoutDate;
                 $slipData['payout_source_type'] = $sourceType;
                 $slipData['payout_source_id'] = $sourceId;
@@ -12618,6 +12819,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $slipData['payment_source_type'] = $sourceType;
                 $slipData['payment_source_id'] = $sourceId;
                 $slipData['payment_source_name'] = $sourceName;
+                $slipData['pay_method'] = ($sourceType === 'cash') ? ($sourceName . ' / Cash') : ($sourceName . ' (Wire)');
                 $slipData['updated_at'] = gmdate('Y-m-d\TH:i:s\Z');
                 array_unshift($db['payroll'], $slipData);
                 $updatedSlip = $slipData;

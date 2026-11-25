@@ -374,6 +374,42 @@ export function registerPayrollModules(FinanceApp) {
         }
       ];
     }
+
+    // Reconcile any Paid payroll slips that are missing a valid Wallet voucher or Bank wire link
+    if (Array.isArray(this.db.payroll) && !this._reconcilingPayrollLinks) {
+      this._reconcilingPayrollLinks = true;
+      try {
+        this.db.payroll.forEach(slip => {
+          if (!slip) return;
+          if (!slip.payout_source_type && slip.payment_source_type) slip.payout_source_type = slip.payment_source_type;
+          if (!slip.payout_source_id && slip.payment_source_id) slip.payout_source_id = slip.payment_source_id;
+          if (!slip.payout_source_name && slip.payment_source_name) slip.payout_source_name = slip.payment_source_name;
+          if ((slip.status || '').toLowerCase() !== 'paid') return;
+          const net = Number(slip.net_pay) || Math.max(0, Number(slip.total_earnings || 0) - Number(slip.total_deductions || 0));
+          if (net <= 0) return;
+          const srcType = slip.payout_source_type || 'bank';
+          if (srcType === 'cash') {
+            const hasValidCv = (this.db.cash_vouchers || []).some(v =>
+              v && v.register_id && Number(v.amount) > 0 &&
+              (v.payroll_id === slip.id || (slip.slip_no && (v.slip_no === slip.slip_no || (v.purpose && v.purpose.includes(slip.slip_no)))))
+            );
+            if (!hasValidCv && typeof this.applyPayrollPayoutDeduction === 'function') {
+              this.applyPayrollPayoutDeduction(slip);
+            }
+          } else {
+            const hasValidWire = (this.db.bank_transfers || []).some(w =>
+              w && w.source_account_id && Number(w.amount) > 0 &&
+              (w.payroll_id === slip.id || (slip.slip_no && (w.slip_no === slip.slip_no || (w.purpose && w.purpose.includes(slip.slip_no)))))
+            );
+            if (!hasValidWire && typeof this.applyPayrollPayoutDeduction === 'function') {
+              this.applyPayrollPayoutDeduction(slip);
+            }
+          }
+        });
+      } finally {
+        this._reconcilingPayrollLinks = false;
+      }
+    }
   };
 
   // ==========================================================================
@@ -661,9 +697,9 @@ export function registerPayrollModules(FinanceApp) {
             </div>
           </td>
           <td style="padding:7px 10px; vertical-align:middle; white-space:nowrap;">
-            <div style="font-size:0.8rem; font-weight:600; color:#f1f5f9;">${escapeHtml(emp.bank_name || 'Cash / On-Hand')}</div>
+            <div style="font-size:0.8rem; font-weight:600; color:#f1f5f9;">${escapeHtml(emp.bank_name || (emp.default_payout_source_type === 'cash' ? (emp.default_payout_source_name || 'RAYAN E-Wallets') : 'Cash / On-Hand'))}</div>
             <div style="font-size:0.7rem; color:#94a3b8; font-family:monospace;">
-              ${emp.iban ? `IBAN: •••• ${escapeHtml(emp.iban.slice(-4))}` : 'Rayan E-Wallets / Cash'}
+              ${emp.default_payout_source_type === 'bank' && emp.default_payout_source_name ? `Via: ${escapeHtml(emp.default_payout_source_name)}` : (emp.iban ? `IBAN: •••• ${escapeHtml(emp.iban.slice(-4))}` : (emp.default_payout_source_name || 'Rayan E-Wallets / Cash'))}
             </div>
           </td>
           <td style="text-align:center; padding:7px 8px; vertical-align:middle; white-space:nowrap;">
@@ -1259,6 +1295,11 @@ export function registerPayrollModules(FinanceApp) {
 
     const isEdit = Boolean(emp);
     const projects = (this.db?.projects || []).filter(p => this.matchesActiveCompany(p.company_id));
+    const bankAccounts = (this.db?.bank_accounts || []).filter(b => this.matchesActiveCompany(b.company_id));
+    const cashRegisters = (this.db?.cash_in_hand || []).filter(c => this.matchesActiveCompany(c.company_id));
+    const empBankLower = String(emp?.bank_name || '').toLowerCase();
+    const defPaySourceType = emp?.default_payout_source_type || ((empBankLower.includes('cash') || empBankLower.includes('wallet') || (!emp?.bank_name && !emp?.iban)) ? 'cash' : 'bank');
+    const defPaySourceId = emp?.default_payout_source_id || (defPaySourceType === 'cash' ? 'cash-mw5esv3w' : 'bank-adcb-uae');
 
     // Auto-calculate next sequential employee number if creating new
     let defaultEmpNo = emp?.employee_no || '';
@@ -1505,16 +1546,34 @@ export function registerPayrollModules(FinanceApp) {
               </div>
             </div>
 
-            <!-- Card 5: Banking Coordinates, Project & Status -->
+            <!-- Card 5: Banking Coordinates, Default Payout Channel, Project & Status -->
             <div class="fin-form-section-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
               <div class="fin-form-section-header" style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); font-weight:700; color:#c084fc; font-size:0.88rem; display:flex; align-items:center; gap:6px;">
                 <span>🏦</span>
-                <span>Bank Details, Project Allocation &amp; Status</span>
+                <span>Salary Payout Link (Wallet / Bank), Bank Details &amp; Status</span>
               </div>
               <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Bank Name</label>
-                  <input type="text" name="bank_name" class="fin-form-input" value="${escapeHtml(emp?.bank_name || '')}" placeholder="e.g. Emirates NBD Bank PJSC / Cash">
+                  <label class="fin-field-label">Default Salary Payout Channel</label>
+                  <select name="default_payout_source_type" id="fin-emp-payout-type" class="fin-form-select" onchange="window.finApp.onEmpPayoutTypeChange(this.value)">
+                    <option value="bank" ${defPaySourceType === 'bank' ? 'selected' : ''}>🏦 Corporate Bank Account (Wire Transfer)</option>
+                    <option value="cash" ${defPaySourceType === 'cash' ? 'selected' : ''}>💵 RAYAN E-Wallets / Cash in Hand</option>
+                  </select>
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Linked Payout Account / Wallet</label>
+                  <select name="default_payout_source_id" id="fin-emp-payout-id" class="fin-form-select">
+                    ${defPaySourceType === 'cash'
+                      ? cashRegisters.map(c => `<option value="${escapeHtml(c.id)}" ${defPaySourceId === c.id ? 'selected' : ''}>💵 ${escapeHtml(c.register_name || 'RAYAN E-Wallets')} (${formatMoney(c.balance)})</option>`).join('')
+                      : bankAccounts.map(b => `<option value="${escapeHtml(b.id)}" ${defPaySourceId === b.id ? 'selected' : ''}>🏦 ${escapeHtml(b.bank_name)} (${formatMoney(b.balance)})</option>`).join('')
+                    }
+                  </select>
+                </div>
+              </div>
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Employee Receiving Bank / Mode</label>
+                  <input type="text" name="bank_name" class="fin-form-input" value="${escapeHtml(emp?.bank_name || '')}" placeholder="e.g. ADCB / Mashreq Bank / Cash">
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">IBAN / Account Number</label>
@@ -1628,6 +1687,18 @@ export function registerPayrollModules(FinanceApp) {
     }
   };
 
+  proto.onEmpPayoutTypeChange = function (type) {
+    const idSel = document.getElementById('fin-emp-payout-id');
+    if (!idSel) return;
+    if (type === 'cash') {
+      const regs = (this.db?.cash_in_hand || []).filter(c => this.matchesActiveCompany(c.company_id));
+      idSel.innerHTML = regs.map(c => `<option value="${escapeHtml(c.id)}" ${c.id === 'cash-mw5esv3w' ? 'selected' : ''}>💵 ${escapeHtml(c.register_name || 'RAYAN E-Wallets')} (${formatMoney(c.balance)})</option>`).join('');
+    } else {
+      const banks = (this.db?.bank_accounts || []).filter(b => this.matchesActiveCompany(b.company_id));
+      idSel.innerHTML = banks.map(b => `<option value="${escapeHtml(b.id)}" ${b.id === 'bank-adcb-uae' ? 'selected' : ''}>🏦 ${escapeHtml(b.bank_name)} (${formatMoney(b.balance)})</option>`).join('');
+    }
+  };
+
   proto.onEmployeeStatusChange = function (val) {
     const sec = document.getElementById('fin-emp-end-date-section');
     const isExit = val === 'Resigned' || val === 'Terminated';
@@ -1708,6 +1779,17 @@ export function registerPayrollModules(FinanceApp) {
     const eligibleForRehire = (formData.get('eligible_for_rehire') || 'yes').trim();
     const rehireNotes = (formData.get('rehire_notes') || '').trim();
 
+    const defPayoutType = (formData.get('default_payout_source_type') || '').trim() || (formData.get('bank_name')?.toLowerCase().includes('cash') ? 'cash' : 'bank');
+    const defPayoutId = (formData.get('default_payout_source_id') || '').trim();
+    let defPayoutName = '';
+    if (defPayoutType === 'cash') {
+      const reg = (this.db?.cash_in_hand || []).find(c => c.id === defPayoutId);
+      defPayoutName = reg ? reg.register_name : 'RAYAN E-Wallets';
+    } else {
+      const bank = (this.db?.bank_accounts || []).find(b => b.id === defPayoutId);
+      defPayoutName = bank ? bank.bank_name : 'Abu Dhabi Commercial Bank (ADCB)';
+    }
+
     const empObj = {
       id: empId,
       employee_no: empNo,
@@ -1751,7 +1833,10 @@ export function registerPayrollModules(FinanceApp) {
       swift: 'EBILAEADXXX',
       iban: (formData.get('iban') || '').trim(),
       account_no: (formData.get('iban') || '').trim(),
-      default_pay_method: formData.get('bank_name')?.toLowerCase().includes('cash') ? 'RAYAN E-Wallets / Cash' : 'AED RAYAN GROUP Host To Host',
+      default_payout_source_type: defPayoutType,
+      default_payout_source_id: defPayoutId,
+      default_payout_source_name: defPayoutName,
+      default_pay_method: defPayoutType === 'cash' ? `${defPayoutName} / Cash` : 'AED RAYAN GROUP Host To Host',
       project_id: prjId,
       project_name: prj ? prj.name : 'Corporate / General Overhead',
       status: empStatus,
@@ -3321,19 +3406,22 @@ export function registerPayrollModules(FinanceApp) {
     const absDed = slip?.absence_deduction ?? 0;
     const loanDed = slip?.loan_deduction ?? 0;
 
-    const sourceType = slip?.payout_source_type || 'bank';
+    const empBankLower = String(targetEmp?.bank_name || '').toLowerCase();
+    const inferredEmpSourceType = targetEmp?.default_payout_source_type || ((empBankLower.includes('cash') || empBankLower.includes('wallet')) ? 'cash' : 'bank');
+    const sourceType = slip?.payout_source_type || slip?.payment_source_type || inferredEmpSourceType || 'bank';
+    const selectedSourceId = slip?.payout_source_id || slip?.payment_source_id || (sourceType === (targetEmp?.default_payout_source_type || '') ? targetEmp?.default_payout_source_id : '') || (sourceType === 'cash' ? 'cash-mw5esv3w' : 'bank-adcb-uae');
     const defaultStatus = slip?.status || 'Paid';
     const paymentDate = slip?.payment_date || new Date().toISOString().split('T')[0];
 
     // Bank accounts options
     const bankOpts = (bankAccounts.length > 0 ? bankAccounts : [
-      { id: 'bank-adcb-uae', bank_name: 'Abu Dhabi Commercial Bank (ADCB)', balance: 3114846.10 }
-    ]).map(b => `<option value="${escapeHtml(b.id)}" ${slip?.payout_source_id === b.id ? 'selected' : ''}>🏦 ${escapeHtml(b.bank_name)} (${formatMoney(b.balance)})</option>`).join('');
+      { id: 'bank-adcb-uae', bank_name: 'Abu Dhabi Commercial Bank (ADCB)', balance: 0 }
+    ]).map(b => `<option value="${escapeHtml(b.id)}" ${selectedSourceId === b.id ? 'selected' : ''}>🏦 ${escapeHtml(b.bank_name)} (${formatMoney(b.balance)})</option>`).join('');
 
     // Cash registers options
     const cashOpts = (cashRegisters.length > 0 ? cashRegisters : [
-      { id: 'cash-mw5esv3w', register_name: 'RAYAN E-Wallets', balance: 1326786.10 }
-    ]).map(c => `<option value="${escapeHtml(c.id)}" ${(slip?.payout_source_id === c.id || (!slip?.payout_source_id && (c.id === 'cash-mw5esv3w' || (c.register_name || '').toLowerCase().includes('wallet')))) ? 'selected' : ''}>💵 ${escapeHtml(c.register_name || 'RAYAN E-Wallets')} (${formatMoney(c.balance)})</option>`).join('');
+      { id: 'cash-mw5esv3w', register_name: 'RAYAN E-Wallets', balance: 0 }
+    ]).map(c => `<option value="${escapeHtml(c.id)}" ${(selectedSourceId === c.id || (!selectedSourceId && (c.id === 'cash-mw5esv3w' || (c.register_name || '').toLowerCase().includes('wallet')))) ? 'selected' : ''}>💵 ${escapeHtml(c.register_name || 'RAYAN E-Wallets')} (${formatMoney(c.balance)})</option>`).join('');
 
     const html = `
       <div class="fin-modal-backdrop open" id="fin-record-payment-modal-backdrop">
@@ -3646,6 +3734,18 @@ export function registerPayrollModules(FinanceApp) {
       projSel.value = emp.project_id;
     }
 
+    const srcTypeEl = document.getElementById('fin-rec-source-type');
+    if (srcTypeEl) {
+      const empBankLow = String(emp.bank_name || '').toLowerCase();
+      const prefType = emp.default_payout_source_type || ((empBankLow.includes('cash') || empBankLow.includes('wallet')) ? 'cash' : 'bank');
+      srcTypeEl.value = prefType;
+      this.onRecordSourceTypeChange(prefType);
+      const srcIdEl = document.getElementById('fin-rec-source-id');
+      if (srcIdEl && emp.default_payout_source_id) {
+        srcIdEl.value = emp.default_payout_source_id;
+      }
+    }
+
     this.calcRecordPaymentTotals();
   };
 
@@ -3656,7 +3756,7 @@ export function registerPayrollModules(FinanceApp) {
     if (type === 'cash') {
       const cashRegisters = (this.db?.cash_in_hand || []).filter(c => this.matchesActiveCompany(c.company_id));
       const list = cashRegisters.length > 0 ? cashRegisters : [
-        { id: 'cash-mw5esv3w', register_name: 'RAYAN E-Wallets', balance: 1326786.10 }
+        { id: 'cash-mw5esv3w', register_name: 'RAYAN E-Wallets', balance: 0 }
       ];
       idSel.innerHTML = list.map(c => `
         <option value="${escapeHtml(c.id)}" ${(c.id === 'cash-mw5esv3w' || (c.register_name || '').toLowerCase().includes('wallet')) ? 'selected' : ''}>💵 ${escapeHtml(c.register_name || 'RAYAN E-Wallets')} (${formatMoney(c.balance)})</option>
@@ -3664,10 +3764,10 @@ export function registerPayrollModules(FinanceApp) {
     } else {
       const bankAccounts = (this.db?.bank_accounts || []).filter(b => this.matchesActiveCompany(b.company_id));
       const list = bankAccounts.length > 0 ? bankAccounts : [
-        { id: 'bank-adcb-uae', bank_name: 'Abu Dhabi Commercial Bank (ADCB)', balance: 3114846.10 }
+        { id: 'bank-adcb-uae', bank_name: 'Abu Dhabi Commercial Bank (ADCB)', balance: 0 }
       ];
       idSel.innerHTML = list.map(b => `
-        <option value="${escapeHtml(b.id)}">🏦 ${escapeHtml(b.bank_name)} (${formatMoney(b.balance)})</option>
+        <option value="${escapeHtml(b.id)}" ${b.id === 'bank-adcb-uae' ? 'selected' : ''}>🏦 ${escapeHtml(b.bank_name)} (${formatMoney(b.balance)})</option>
       `).join('');
     }
   };
@@ -3798,6 +3898,9 @@ export function registerPayrollModules(FinanceApp) {
       payout_source_type: sourceType,
       payout_source_id: sourceId,
       payout_source_name: sourceName,
+      payment_source_type: sourceType,
+      payment_source_id: sourceId,
+      payment_source_name: sourceName,
       payout_reference: payRef,
       project_id: prjId,
       project_name: prj ? prj.name : 'Corporate / General Overhead',
@@ -3815,10 +3918,8 @@ export function registerPayrollModules(FinanceApp) {
       this.db.payroll.unshift(slipObj);
     }
 
-    // Execute direct balance deduction from selected Bank Account or RAYAN E-Wallets if marked Paid!
-    if (status === 'Paid') {
-      this.applyPayrollPayoutDeduction(slipObj);
-    }
+    // Reconcile or clear Cash Voucher / Bank Transfer ledger entries and recalculate balances
+    this.applyPayrollPayoutDeduction(slipObj);
 
     this.closeRecordEmployeePaymentModal();
     this.normalizeAllBalances();
@@ -3934,6 +4035,9 @@ export function registerPayrollModules(FinanceApp) {
       }
     } catch (e) { }
 
+    if (slip && typeof this.removePayrollPayoutTransactions === 'function') {
+      this.removePayrollPayoutTransactions(slip);
+    }
     this.db.payroll_initialized = true;
     this.db.payroll = (this.db.payroll || []).filter(p => p.id !== slipId && p.slip_no !== slipId && (!slip || (p.id !== slip.id && p.slip_no !== slip.slip_no)));
 
@@ -3974,11 +4078,22 @@ export function registerPayrollModules(FinanceApp) {
   // 6. PAYOUT EXECUTION & BALANCE DEDUCTION MODAL
   // ==========================================================================
   proto.openDisburseSalaryModal = function (slipId) {
+    this.ensurePayrollSeedData();
+    if (typeof this.normalizeAllBalances === 'function') this.normalizeAllBalances();
     const slip = (this.db?.payroll || []).find(p => p.id === slipId);
     if (!slip) return;
 
     const bankAccounts = (this.db?.bank_accounts || []).filter(b => this.matchesActiveCompany(b.company_id));
     const cashRegisters = (this.db?.cash_in_hand || []).filter(c => this.matchesActiveCompany(c.company_id));
+    const netAmount = Number(slip.net_pay) || Math.max(0, (Number(slip.total_earnings) || 0) - (Number(slip.total_deductions) || 0));
+    const initSourceType = slip.payout_source_type || slip.payment_source_type || (slip.bank_name && !slip.bank_name.toLowerCase().includes('cash') ? 'bank' : 'cash');
+    const initSourceId = slip.payout_source_id || slip.payment_source_id || (initSourceType === 'cash' ? 'cash-mw5esv3w' : 'bank-adcb-uae');
+    const todayDate = new Date().toISOString().split('T')[0];
+    const defaultRef = slip.payout_reference || `TXN-PAYROLL-${todayDate.replace(/-/g, '')}-${slip.employee_no || 'EMP'}`;
+
+    const accountOpts = initSourceType === 'cash'
+      ? cashRegisters.map(c => `<option value="${escapeHtml(c.id)}" ${(c.id === initSourceId || (!initSourceId && (c.id === 'cash-mw5esv3w' || (c.register_name || '').toLowerCase().includes('wallet')))) ? 'selected' : ''}>💵 ${escapeHtml(c.register_name || 'RAYAN E-Wallets')} (${this.formatCurrency(c.balance)})</option>`).join('')
+      : bankAccounts.map(b => `<option value="${escapeHtml(b.id)}" ${(b.id === initSourceId || (!initSourceId && b.id === 'bank-adcb-uae')) ? 'selected' : ''}>🏦 ${escapeHtml(b.bank_name)} (${this.formatCurrency(b.balance)})</option>`).join('');
 
     const html = `
       <div class="fin-modal-backdrop open" id="fin-disburse-modal-backdrop">
@@ -4008,7 +4123,7 @@ export function registerPayrollModules(FinanceApp) {
               <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding-top:0.5rem; margin-top:0.5rem;">
                 <span style="font-size:0.82rem; font-weight:700; color:#10b981;">Net Salary to Deduct:</span>
                 <strong style="font-size:1.25rem; font-weight:800; color:#10b981;">
-                  ${this.formatCurrency(slip.net_pay, slip.currency || 'AED')}
+                  ${this.formatCurrency(netAmount, slip.currency || 'AED')}
                 </strong>
               </div>
             </div>
@@ -4017,26 +4132,26 @@ export function registerPayrollModules(FinanceApp) {
             <div style="margin-bottom:1rem;">
               <label class="fin-form-label">Payment Source Type *</label>
               <select name="payout_source_type" id="fin-disb-source-type" class="fin-form-select" required onchange="window.finApp.onDisburseSourceTypeChange(this.value)">
-                <option value="bank">Bank Account (Electronic Wire / Host To Host)</option>
-                <option value="cash">RAYAN E-Wallets / Cash in Hand Register</option>
+                <option value="bank" ${initSourceType === 'bank' ? 'selected' : ''}>🏦 Bank Account (Electronic Wire / Host To Host)</option>
+                <option value="cash" ${initSourceType === 'cash' ? 'selected' : ''}>💵 RAYAN E-Wallets / Cash in Hand Register</option>
               </select>
             </div>
 
             <div style="margin-bottom:1rem;">
               <label class="fin-form-label">Select Account to Deduct Balance From *</label>
               <select name="payout_source_id" id="fin-disb-source-id" class="fin-form-select" required>
-                ${bankAccounts.map(b => `<option value="${escapeHtml(b.id)}">🏦 ${escapeHtml(b.bank_name)} (${this.formatCurrency(b.balance)})</option>`).join('')}
+                ${accountOpts}
               </select>
             </div>
 
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
               <div>
                 <label class="fin-form-label">Disbursement Date</label>
-                <input type="date" name="payment_date" class="fin-form-input" required value="${new Date().toISOString().split('T')[0]}">
+                <input type="date" name="payment_date" class="fin-form-input" required value="${escapeHtml(slip.payment_date && /^\d{4}-\d{2}-\d{2}$/.test(slip.payment_date) ? slip.payment_date : todayDate)}">
               </div>
               <div>
                 <label class="fin-form-label">Transaction / Cheque Ref</label>
-                <input type="text" name="payout_reference" class="fin-form-input" value="TXN-PAYROLL-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}">
+                <input type="text" name="payout_reference" class="fin-form-input" value="${escapeHtml(defaultRef)}">
               </div>
             </div>
 
@@ -4062,12 +4177,12 @@ export function registerPayrollModules(FinanceApp) {
     if (type === 'cash') {
       const cashRegisters = (this.db?.cash_in_hand || []).filter(c => this.matchesActiveCompany(c.company_id));
       idSel.innerHTML = cashRegisters.map(c => `
-        <option value="${escapeHtml(c.id)}">💵 ${escapeHtml(c.register_name || 'RAYAN E-Wallets')} (${this.formatCurrency(c.balance)})</option>
+        <option value="${escapeHtml(c.id)}" ${(c.id === 'cash-mw5esv3w' || (c.register_name || '').toLowerCase().includes('wallet')) ? 'selected' : ''}>💵 ${escapeHtml(c.register_name || 'RAYAN E-Wallets')} (${this.formatCurrency(c.balance)})</option>
       `).join('');
     } else {
       const bankAccounts = (this.db?.bank_accounts || []).filter(b => this.matchesActiveCompany(b.company_id));
       idSel.innerHTML = bankAccounts.map(b => `
-        <option value="${escapeHtml(b.id)}">🏦 ${escapeHtml(b.bank_name)} (${this.formatCurrency(b.balance)})</option>
+        <option value="${escapeHtml(b.id)}" ${b.id === 'bank-adcb-uae' ? 'selected' : ''}>🏦 ${escapeHtml(b.bank_name)} (${this.formatCurrency(b.balance)})</option>
       `).join('');
     }
   };
@@ -4084,6 +4199,8 @@ export function registerPayrollModules(FinanceApp) {
     const slip = (this.db?.payroll || []).find(p => p.id === slipId);
     if (!slip) return;
 
+    const netAmt = Number(slip.net_pay) || Math.max(0, (Number(slip.total_earnings) || 0) - (Number(slip.total_deductions) || 0));
+    slip.net_pay = netAmt;
     const sourceType = formData.get('payout_source_type') || 'bank';
     const sourceId = formData.get('payout_source_id') || '';
     const payDate = formData.get('payment_date') || new Date().toISOString().split('T')[0];
@@ -4103,7 +4220,12 @@ export function registerPayrollModules(FinanceApp) {
     slip.payout_source_type = sourceType;
     slip.payout_source_id = sourceId;
     slip.payout_source_name = sourceName;
+    slip.payment_source_type = sourceType;
+    slip.payment_source_id = sourceId;
+    slip.payment_source_name = sourceName;
     slip.payout_reference = payRef;
+    slip.pay_method = sourceType === 'cash' ? `${sourceName} / Cash` : `${sourceName} (Wire)`;
+    slip.transferred_amount = netAmt;
     slip.updated_at = new Date().toISOString();
 
     // Deduct balance from Bank or Cash
@@ -4114,7 +4236,7 @@ export function registerPayrollModules(FinanceApp) {
     if (typeof this.saveDatabaseToCache === 'function') {
       this.saveDatabaseToCache();
     }
-    this.showToast ? this.showToast(`Salary disbursed: ${this.formatCurrency(slip.net_pay)} deducted from ${sourceName}`, 'success') : null;
+    this.showToast ? this.showToast(`Salary disbursed: ${this.formatCurrency(netAmt)} deducted from ${sourceName}`, 'success') : null;
 
     try {
       await this.syncWithBackend('disburse_payroll', {
@@ -4122,90 +4244,9 @@ export function registerPayrollModules(FinanceApp) {
         payroll: slip,
         source_type: sourceType,
         source_id: sourceId,
-        amount: slip.net_pay,
+        amount: netAmt,
         payment_date: payDate,
         payout_reference: payRef
-      });
-    } catch (err) {
-      console.warn('Backend disburse sync warning:', err);
-    }
-
-    if (this.activeTab === 'payroll') {
-      this.renderPayrollTab((document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container')));
-    }
-  };
-
-  proto.disbursePayrollDirect = async function (slipId) {
-    this.ensurePayrollSeedData();
-    const slip = (this.db?.payroll || []).find(p => p.id === slipId);
-    if (!slip) {
-      alert('Pay slip not found');
-      return;
-    }
-
-    const net = Number(slip.net_pay) || (Number(slip.total_earnings || 0) - Number(slip.total_deductions || 0));
-    const sourceType = slip.payout_source_type || 'cash';
-    let sourceName = slip.payout_source_name || (sourceType === 'cash' ? 'RAYAN E-Wallets' : 'Abu Dhabi Commercial Bank (ADCB)');
-    let currentBalance = 0;
-
-    if (sourceType === 'cash') {
-      const reg = (this.db?.cash_in_hand || []).find(c => c.id === slip.payout_source_id) ||
-        (this.db?.cash_in_hand || []).find(c => (c.register_name || '').toLowerCase().includes('wallet')) ||
-        (this.db?.cash_in_hand || [])[0];
-      if (reg) {
-        sourceName = reg.register_name;
-        currentBalance = Number(reg.balance) || 0;
-        slip.payout_source_id = reg.id;
-      }
-    } else {
-      const bank = (this.db?.bank_accounts || []).find(b => b.id === slip.payout_source_id) ||
-        (this.db?.bank_accounts || [])[0];
-      if (bank) {
-        sourceName = bank.bank_name;
-        currentBalance = Number(bank.balance) || 0;
-        slip.payout_source_id = bank.id;
-      }
-    }
-    slip.payout_source_name = sourceName;
-
-    const confirmMsg = `⚡ Confirm Salary Payout & Direct Balance Deduction:\n\n` +
-      `• Employee: ${slip.employee_name} (${slip.employee_no || ''})\n` +
-      `• Pay Slip Ref: ${slip.slip_no}\n` +
-      `• Target Period: ${slip.month_year || slip.period_label || 'Current'}\n` +
-      `• Payout Net Amount: ${this.formatCurrency(net, slip.currency || 'AED')}\n` +
-      `• Payment Source: ${sourceName} (Available Balance: ${this.formatCurrency(currentBalance)})\n\n` +
-      `Click OK to deduct ${this.formatCurrency(net)} immediately from ${sourceName} and mark this slip as Paid.`;
-
-    if (!confirm(confirmMsg)) return;
-
-    slip.status = 'Paid';
-    slip.payment_date = new Date().toISOString().split('T')[0];
-    if (!slip.payout_reference) {
-      slip.payout_reference = `TXN-PAYROLL-${slip.payment_date.replace(/-/g, '')}-${slip.employee_no || 'EMP'}`;
-    }
-    slip.updated_at = new Date().toISOString();
-
-    // Execute direct deduction from cash or bank and create outflow voucher/wire
-    this.applyPayrollPayoutDeduction(slip);
-    this.normalizeAllBalances();
-    if (typeof this.saveDatabaseToCache === 'function') {
-      this.saveDatabaseToCache();
-    }
-
-    this.showToast
-      ? this.showToast(`✓ Salary disbursed: ${this.formatCurrency(net)} deducted from ${sourceName}`, 'success')
-      : alert(`✓ Salary disbursed: ${this.formatCurrency(net)} deducted from ${sourceName}`);
-
-    // Sync with backend API
-    try {
-      await this.syncWithBackend('disburse_payroll', {
-        slip_id: slip.id,
-        payroll: slip,
-        source_type: slip.payout_source_type || 'cash',
-        source_id: slip.payout_source_id,
-        amount: net,
-        payment_date: slip.payment_date,
-        payout_reference: slip.payout_reference
       });
     } catch (err) {
       console.warn('Backend disburse sync warning:', err);
@@ -4218,47 +4259,99 @@ export function registerPayrollModules(FinanceApp) {
     }
   };
 
-  proto.applyPayrollPayoutDeduction = function (slip) {
-    const net = Number(slip.net_pay) || 0;
-    if (net <= 0) return;
+  proto.disbursePayrollDirect = function (slipId) {
+    // Open the interactive Disburse Salary modal pre-filled with Wallet or Bank selection and live balances
+    this.openDisburseSalaryModal(slipId);
+  };
 
-    const sourceType = slip.payout_source_type || 'bank';
-    const sourceId = slip.payout_source_id;
+  proto.removePayrollPayoutTransactions = function (slip) {
+    if (!slip || !this.db) return;
+    const sId = slip.id || '';
+    const sNo = slip.slip_no || '';
+
+    if (Array.isArray(this.db.cash_vouchers)) {
+      this.db.cash_vouchers = this.db.cash_vouchers.filter(v => {
+        if (!v) return false;
+        if (sId && (v.payroll_id === sId || v.id === `cv-${sId}` || v.id === `cv-pay-${sId}`)) return false;
+        if (sNo && v.slip_no === sNo) return false;
+        if (sNo && (v.category || '').toLowerCase().includes('salary') && (v.purpose || '').includes(`(${sNo})`)) return false;
+        return true;
+      });
+    }
+
+    if (Array.isArray(this.db.bank_transfers)) {
+      const removedWires = [];
+      this.db.bank_transfers = this.db.bank_transfers.filter(w => {
+        if (!w) return false;
+        const match = (sId && (w.payroll_id === sId || w.id === `wire-${sId}`)) ||
+          (sNo && w.slip_no === sNo) ||
+          (sNo && (w.type_label === 'Salary & Wage Payout' || (w.purpose || '').startsWith('Salary Payout')) && (w.purpose || '').includes(`(${sNo})`));
+        if (match) {
+          removedWires.push(w);
+          return false;
+        }
+        return true;
+      });
+      // Refund non-ADCB bank accounts (ADCB is dynamically derived from receipts - transfers)
+      removedWires.forEach(w => {
+        if (w.source_account_id && w.source_account_id !== 'bank-adcb-uae' && Array.isArray(this.db.bank_accounts)) {
+          const ba = this.db.bank_accounts.find(b => b.id === w.source_account_id);
+          if (ba) ba.balance = Math.round(((Number(ba.balance) || 0) + (Number(w.amount) || 0)) * 100) / 100;
+        }
+      });
+    }
+  };
+
+  proto.applyPayrollPayoutDeduction = function (slip) {
+    if (!slip || !this.db) return;
+    const net = Number(slip.net_pay) || Math.max(0, (Number(slip.total_earnings) || 0) - (Number(slip.total_deductions) || 0));
+
+    // Always remove prior voucher/wire linked to this slip first (handles edits, Wallet <-> Bank switches, & un-paying)
+    this.removePayrollPayoutTransactions(slip);
+
+    if (net <= 0 || (slip.status || '').toLowerCase() !== 'paid') return;
+
+    const sourceType = slip.payout_source_type || slip.payment_source_type || 'bank';
+    const sourceId = slip.payout_source_id || slip.payment_source_id;
+    const payDate = slip.payment_date || new Date().toISOString().split('T')[0];
 
     if (sourceType === 'cash') {
       let reg = (this.db?.cash_in_hand || []).find(c => c.id === sourceId);
       if (!reg) {
-        reg = (this.db?.cash_in_hand || []).find(c => (c.register_name || '').toLowerCase().includes('rayan e-wallet'));
+        reg = (this.db?.cash_in_hand || []).find(c => c.id === 'cash-mw5esv3w' || (c.register_name || '').toLowerCase().includes('rayan e-wallet'));
       }
       if (reg) {
-        reg.balance = Math.round(((Number(reg.balance) || 0) - net) * 100) / 100;
+        slip.payout_source_type = 'cash';
+        slip.payout_source_id = reg.id;
+        slip.payout_source_name = reg.register_name;
+        slip.payment_source_type = 'cash';
+        slip.payment_source_id = reg.id;
+        slip.payment_source_name = reg.register_name;
 
-        // Create Cash Voucher Record
         if (!Array.isArray(this.db.cash_vouchers)) this.db.cash_vouchers = [];
-        const cvNo = slip.payout_reference || `CV-SAL-${slip.employee_no}-${Date.now().toString().slice(-4)}`;
-        const exists = this.db.cash_vouchers.find(v => v.voucher_no === cvNo || (v.purpose && v.purpose.includes(slip.slip_no)));
-        if (!exists) {
-          this.db.cash_vouchers.unshift({
-            id: `cv-${Date.now()}`,
-            voucher_no: cvNo,
-            company_id: slip.company_id || 'rayan-corp-uae',
-            register_id: reg.id,
-            cash_in_hand_id: reg.id,
-            register_name: reg.register_name,
-            custodian: reg.custodian || 'Arshad Alam Shaikh',
-            voucher_date: slip.payment_date || new Date().toISOString().split('T')[0],
-            date: slip.payment_date || new Date().toISOString().split('T')[0],
-            type: 'outflow',
-            category: 'Salary & Labor Payout',
-            payee: slip.employee_name,
-            party_name: slip.employee_name,
-            amount: net,
-            currency: slip.currency || 'AED',
-            purpose: `Salary Payout for ${slip.month_year || slip.period_label} to ${slip.employee_name} (${slip.slip_no})`,
-            status: 'Approved',
-            created_at: new Date().toISOString()
-          });
-        }
+        const cvNo = slip.payout_reference || `CV-SAL-${slip.employee_no || 'EMP'}-${Date.now().toString().slice(-4)}`;
+        this.db.cash_vouchers.unshift({
+          id: slip.id ? `cv-${slip.id}` : `cv-${Date.now()}`,
+          payroll_id: slip.id || '',
+          slip_no: slip.slip_no || '',
+          voucher_no: cvNo,
+          company_id: slip.company_id || 'rayan-corp-uae',
+          register_id: reg.id,
+          cash_in_hand_id: reg.id,
+          register_name: reg.register_name,
+          custodian: reg.custodian || 'Arshad Alam Shaikh',
+          voucher_date: payDate,
+          date: payDate,
+          type: 'outflow',
+          category: 'Salary & Labor Payout',
+          payee: slip.employee_name || 'Staff',
+          party_name: slip.employee_name || 'Staff',
+          amount: net,
+          currency: slip.currency || 'AED',
+          purpose: `Salary Payout for ${slip.month_year || slip.period_label || 'Payroll'} to ${slip.employee_name || ''} (${slip.slip_no || ''})`,
+          status: 'Approved',
+          created_at: new Date().toISOString()
+        });
       }
     } else {
       let bank = (this.db?.bank_accounts || []).find(b => b.id === sourceId);
@@ -4266,31 +4359,39 @@ export function registerPayrollModules(FinanceApp) {
         bank = this.db.bank_accounts[0];
       }
       if (bank) {
-        bank.balance = Math.round(((Number(bank.balance) || 0) - net) * 100) / 100;
+        slip.payout_source_type = 'bank';
+        slip.payout_source_id = bank.id;
+        slip.payout_source_name = bank.bank_name;
+        slip.payment_source_type = 'bank';
+        slip.payment_source_id = bank.id;
+        slip.payment_source_name = bank.bank_name;
 
-        // Create Outward Bank Transfer Record
-        if (!Array.isArray(this.db.bank_transfers)) this.db.bank_transfers = [];
-        const wireRef = slip.payout_reference || `SAL-${slip.slip_no.replace(/[^a-zA-Z0-9]/g, '')}`;
-        const exists = this.db.bank_transfers.find(w => w.reference_no === wireRef || (w.purpose && w.purpose.includes(slip.slip_no)));
-        if (!exists) {
-          this.db.bank_transfers.unshift({
-            id: `wire-${Date.now()}`,
-            company_id: slip.company_id || 'rayan-corp-uae',
-            reference_no: wireRef,
-            transfer_date: slip.payment_date || new Date().toISOString().split('T')[0],
-            date: slip.payment_date || new Date().toISOString().split('T')[0],
-            counterparty: slip.employee_name,
-            source_account_id: bank.id,
-            source_bank: bank.bank_name || 'Bank',
-            type: 'outward',
-            type_label: 'Salary & Wage Payout',
-            amount: net,
-            currency: slip.currency || 'AED',
-            purpose: `Salary Payout for ${slip.month_year || slip.period_label} to ${slip.employee_name} (${slip.slip_no})`,
-            status: 'Cleared',
-            created_at: new Date().toISOString()
-          });
+        if (bank.id !== 'bank-adcb-uae') {
+          bank.balance = Math.round(((Number(bank.balance) || 0) - net) * 100) / 100;
         }
+
+        if (!Array.isArray(this.db.bank_transfers)) this.db.bank_transfers = [];
+        const wireRef = slip.payout_reference || `SAL-${(slip.slip_no || slip.id || 'PAY').replace(/[^a-zA-Z0-9]/g, '')}`;
+        this.db.bank_transfers.unshift({
+          id: slip.id ? `wire-${slip.id}` : `wire-${Date.now()}`,
+          payroll_id: slip.id || '',
+          slip_no: slip.slip_no || '',
+          company_id: slip.company_id || 'rayan-corp-uae',
+          reference_no: wireRef,
+          transfer_date: payDate,
+          date: payDate,
+          counterparty: slip.employee_name || 'Staff',
+          source_account_id: bank.id,
+          source_bank: bank.bank_name || 'Bank',
+          destination_bank: slip.bank_name || 'Staff Bank',
+          type: 'outward_wire',
+          type_label: 'Salary & Wage Payout',
+          amount: net,
+          currency: slip.currency || 'AED',
+          purpose: `Salary Payout for ${slip.month_year || slip.period_label || 'Payroll'} to ${slip.employee_name || ''} (${slip.slip_no || ''})`,
+          status: 'Cleared',
+          created_at: new Date().toISOString()
+        });
       }
     }
   };

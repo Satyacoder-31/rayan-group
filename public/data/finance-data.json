@@ -15631,7 +15631,7 @@
       "client_po_no": "SD/2026/09",
       "po_date": "2026-11-05",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 09:22:39"
     },
     {
       "id": "po-cust-1794907665036",
@@ -15660,7 +15660,7 @@
       "client_po_no": "BD/2026/12",
       "po_date": "2026-11-08",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 09:22:39"
     },
     {
       "id": "po-cust-1794907359313",
@@ -15689,7 +15689,7 @@
       "client_po_no": "WALD-2026-11",
       "po_date": "2026-05-11",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 09:22:39"
     },
     {
       "id": "po-cust-1794906873322",
@@ -15718,7 +15718,7 @@
       "client_po_no": "PODSUB-2026/0841",
       "po_date": "2026-04-17",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 09:22:39"
     },
     {
       "id": "po-cust-1794906783496",
@@ -15747,7 +15747,7 @@
       "client_po_no": "BR/SCA-001/JBN-1504/2026",
       "po_date": "2026-04-19",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 09:22:39"
     },
     {
       "id": "po-cust-1794906395194",
@@ -15776,7 +15776,7 @@
       "client_po_no": "AYAT-2026-14",
       "po_date": "2026-02-08",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 09:22:39"
     },
     {
       "id": "po-cust-1794906065607",
@@ -15805,7 +15805,7 @@
       "client_po_no": "MOBIN1111",
       "po_date": "2026-01-14",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 09:22:39"
     },
     {
       "id": "po-cust-1794891555181",
@@ -15834,7 +15834,7 @@
       "client_po_no": "PODSUB-2025/1826/R1",
       "po_date": "2025-09-22",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 09:22:39"
     },
     {
       "id": "po-cust-1794891456844",
@@ -15863,7 +15863,7 @@
       "client_po_no": "HLN-2025-44",
       "po_date": "2025-08-09",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 09:22:39"
     },
     {
       "id": "po-smi-26-0089",
@@ -15892,7 +15892,7 @@
       "client_po_no": "SMI-26-0089",
       "po_date": "2026-05-13",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 09:22:39"
     },
     {
       "id": "po-cust-1794730202844",
@@ -15914,7 +15914,7 @@
       "approved_by": "Arshad Alam Shaikh",
       "po_date": "2026-06-03",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "internal_ref": "REC-CLPO-44024",
       "ref_no": "REC-CLPO-44024",
       "rec_ref": "REC-CLPO-44024",
@@ -15943,7 +15943,7 @@
       "approved_by": "Arshad Alam Shaikh",
       "po_date": "2026-01-26",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "internal_ref": "REC-CLPO-44016",
       "ref_no": "REC-CLPO-44016",
       "rec_ref": "REC-CLPO-44016",
@@ -15986,7 +15986,7 @@
       ],
       "po_date": "2026-03-10",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "internal_ref": "REC-CLPO-44018",
       "ref_no": "REC-CLPO-44018",
       "rec_ref": "REC-CLPO-44018",
@@ -16015,7 +16015,7 @@
       "approved_by": "Arshad Alam Shaikh",
       "po_date": "2024-03-19",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -16048,7 +16048,7 @@
       "approved_by": "Arshad Alam Shaikh",
       "po_date": "2025-05-01",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "internal_ref": "REC-CLPO-44011",
       "ref_no": "REC-CLPO-44011",
       "rec_ref": "REC-CLPO-44011",
@@ -16077,7 +16077,7 @@
       "approved_by": "Arshad Alam Shaikh",
       "po_date": "2023-05-11",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17311,7 +17311,7 @@
       ],
       "po_date": "2024-05-25",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17359,7 +17359,7 @@
       ],
       "po_date": "2026-11-09",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17416,7 +17416,7 @@
       ],
       "po_date": "2026-11-05",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "customer_id": "cust-sadeco",
       "customer_name": "M/S SADECO DÉCOR LLC",
       "type": "customer_po",
@@ -17474,7 +17474,7 @@
       "vat_total": 9726.6515,
       "po_date": "2026-11-01",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17532,7 +17532,7 @@
       "vat_total": 719.821,
       "po_date": "2026-06-07",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17590,7 +17590,7 @@
       "vat_total": 509.425,
       "po_date": "2026-06-22",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17648,7 +17648,7 @@
       "vat_total": 3406.8115,
       "po_date": "2026-03-19",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17695,7 +17695,7 @@
       ],
       "po_date": "2024-07-15",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17752,7 +17752,7 @@
       ],
       "po_date": "2024-03-22",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17811,7 +17811,7 @@
       "vat_total": 6493.224,
       "po_date": "2024-10-12",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:37:42",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17858,7 +17858,7 @@
       ],
       "po_date": "2024-11-15",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17915,7 +17915,7 @@
       ],
       "po_date": "2023-07-06",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17972,7 +17972,7 @@
       ],
       "po_date": "2025-11-19",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18029,7 +18029,7 @@
       ],
       "po_date": "2026-06-06",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18088,7 +18088,7 @@
       "vat_total": 4524.963500000001,
       "po_date": "2026-06-19",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18144,7 +18144,7 @@
       ],
       "po_date": "2024-07-15",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18201,7 +18201,7 @@
       ],
       "po_date": "2026-06-28",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18249,7 +18249,7 @@
       ],
       "po_date": "2026-11-05",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18306,7 +18306,7 @@
       ],
       "po_date": "2026-10-04",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18358,7 +18358,7 @@
       "vat_total": 0,
       "po_date": "2026-10-26",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:22:39",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18446,6 +18446,162 @@
     }
   ],
   "audit_logs": [
+    {
+      "id": "aud-1a2120a046a",
+      "timestamp": "2026-11-25T09:29:36+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "payroll",
+      "entity_id": "PSOct2026/EN12009",
+      "details": "Saved pay slip PSOct2026/EN12009",
+      "ip_address": "5.195.113.16"
+    },
+    {
+      "id": "aud-1a2120638bf",
+      "timestamp": "2026-11-25T09:25:27+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "payroll",
+      "entity_id": "PSOct2026/EN12008",
+      "details": "Saved pay slip PSOct2026/EN12008",
+      "ip_address": "5.195.130.127"
+    },
+    {
+      "id": "aud-1a212056e38",
+      "timestamp": "2026-11-25T09:24:35+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "payroll",
+      "entity_id": "PSOct2026/EN12007",
+      "details": "Saved pay slip PSOct2026/EN12007",
+      "ip_address": "5.195.130.127"
+    },
+    {
+      "id": "aud-1a21204097a",
+      "timestamp": "2026-11-25T09:23:04+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "payroll",
+      "entity_id": "PSOct2026/EN12006",
+      "details": "Saved pay slip PSOct2026/EN12006",
+      "ip_address": "5.195.130.127"
+    },
+    {
+      "id": "aud-1a212038c8c",
+      "timestamp": "2026-11-25T09:22:32+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "payroll",
+      "entity_id": "PSOct2026/EN12006",
+      "details": "Saved pay slip PSOct2026/EN12006",
+      "ip_address": "5.195.130.127"
+    },
+    {
+      "id": "aud-1a212013554",
+      "timestamp": "2026-11-25T09:19:58+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "employee",
+      "entity_id": "EN12009",
+      "details": "Saved employee Bakhteyar Alam Mokhtar Ahmad",
+      "ip_address": "5.195.130.127"
+    },
+    {
+      "id": "aud-1a211faf628",
+      "timestamp": "2026-11-25T09:13:09+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "payroll",
+      "entity_id": "PSFeb2025/EN12001",
+      "details": "Saved pay slip PSFeb2025/EN12001",
+      "ip_address": "5.195.130.127"
+    },
+    {
+      "id": "aud-1a211fa006f",
+      "timestamp": "2026-11-25T09:12:06+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "payroll",
+      "entity_id": "PSAug2025/EN12002",
+      "details": "Saved pay slip PSAug2025/EN12002",
+      "ip_address": "5.195.130.127"
+    },
+    {
+      "id": "aud-1a211f8fd31",
+      "timestamp": "2026-11-25T09:11:00+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "payroll",
+      "entity_id": "PSJul2025/EN12003",
+      "details": "Saved pay slip PSJul2025/EN12003",
+      "ip_address": "5.195.130.127"
+    },
+    {
+      "id": "aud-1a211f7977e",
+      "timestamp": "2026-11-25T09:09:28+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "payroll",
+      "entity_id": "PSOct2024/EN12005",
+      "details": "Saved pay slip PSOct2024/EN12005",
+      "ip_address": "5.195.130.127"
+    },
+    {
+      "id": "aud-1a211f6ba0a",
+      "timestamp": "2026-11-25T09:08:31+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "payroll",
+      "entity_id": "PSOct2024/EN12004",
+      "details": "Saved pay slip PSOct2024/EN12004",
+      "ip_address": "5.195.130.127"
+    },
+    {
+      "id": "aud-1a211c7a1fc",
+      "timestamp": "2026-11-25T08:17:05+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "work_completion",
+      "entity_id": "REC-JOB COM-11021",
+      "details": "Saved work completion certificate REC-JOB COM-11021",
+      "ip_address": "5.195.113.16"
+    },
+    {
+      "id": "aud-1a211c40ea8",
+      "timestamp": "2026-11-25T08:13:11+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "work_completion",
+      "entity_id": "REC-JOB COM-11010",
+      "details": "Saved work completion certificate REC-JOB COM-11010",
+      "ip_address": "5.195.113.16"
+    },
     {
       "id": "aud-1a211b48a85",
       "timestamp": "2026-11-25T07:56:14+00:00",
@@ -23199,12 +23355,12 @@
       "swift": "ADCBAEAA",
       "branch": "Dalma Mall Branch - Abu Dhabi",
       "currency": "AED",
-      "balance": "501628.34",
+      "balance": "475828.34",
       "signatory": "Arshad Alam Shaikh",
       "status": "Active",
       "ifsc_code": "",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 09:22:39"
     },
     {
       "id": "bank-sbi-corp",
@@ -23250,7 +23406,7 @@
       "last_replenished": "2025-02-22",
       "is_primary": true,
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 07:56:16"
     },
     {
       "id": "cash-dubai-reg",
@@ -23312,7 +23468,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2023-05-13",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44001"
     },
     {
@@ -23333,7 +23489,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2023-08-31",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44002"
     },
     {
@@ -23354,7 +23510,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2023-09-09",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44003"
     },
     {
@@ -23375,7 +23531,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2024-03-22",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44004"
     },
     {
@@ -23396,7 +23552,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2024-04-22",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44005"
     },
     {
@@ -23417,7 +23573,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2024-05-17",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44006"
     },
     {
@@ -23438,7 +23594,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2024-06-21",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44007"
     },
     {
@@ -23459,7 +23615,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2024-06-26",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44008"
     },
     {
@@ -23480,7 +23636,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2024-07-19",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44009"
     },
     {
@@ -23501,7 +23657,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-08-12",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44010"
     },
     {
@@ -23522,7 +23678,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-09-19",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44011"
     },
     {
@@ -23543,7 +23699,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-09-25",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44012"
     },
     {
@@ -23564,7 +23720,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-10-03",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44013"
     },
     {
@@ -23585,7 +23741,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-10-10",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44014"
     },
     {
@@ -23606,7 +23762,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-10-18",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44015"
     },
     {
@@ -23627,7 +23783,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-11-20",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44016"
     },
     {
@@ -23648,7 +23804,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-12-15",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44017"
     },
     {
@@ -23669,7 +23825,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2026-06-30",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44018"
     },
     {
@@ -23690,7 +23846,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2026-07-06",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44019"
     },
     {
@@ -23711,7 +23867,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2026-09-11",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44020"
     },
     {
@@ -23732,7 +23888,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2026-09-16",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44021"
     },
     {
@@ -23751,7 +23907,7 @@
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2026-10-26",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44022"
     },
     {
@@ -23768,7 +23924,7 @@
       "notes": "REC-RG-INV-44023",
       "cheque_date": "2026-11-12",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 07:56:16",
       "reference_no": "REC-CQ-44023"
     },
     {
@@ -23788,7 +23944,7 @@
       "created_at": "2026-11-25 07:56:14",
       "reference_no": "REC-CQ-44024",
       "cheque_date": "2026-11-16",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 07:56:16"
     },
     {
       "id": "chq-rcp-rec-mwlzza9m",
@@ -23808,7 +23964,7 @@
       "bank_account_id": "bank-adcb-uae",
       "reference_no": "REC-CQ-44025",
       "cheque_date": "2026-11-16",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 09:37:42"
     },
     {
       "id": "chq-rcp-rec-mwm010bx",
@@ -23825,9 +23981,9 @@
       "currency": "AED",
       "status": "In Hand",
       "notes": "Customer Receipt REC-RV-44071 against REC-RG-INV-44015",
-      "created_at": "2026-11-25 07:56:14",
+      "created_at": "2026-11-18 10:49:08",
       "bank_account_id": "bank-adcb-uae",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:37:42",
       "reference_no": "REC-CQ-44026"
     }
   ],
@@ -24336,7 +24492,7 @@
       "currency": "AED",
       "purpose": "Corporate bank cash withdrawal to replenish RAYAN E-Wallets for project disbursements & expenses",
       "status": "Cleared",
-      "created_at": "2026-11-25T07:56:16+00:00",
+      "created_at": "2026-11-25T09:38:19+00:00",
       "updated_at": "2026-11-25 07:56:14"
     },
     {
@@ -25012,7 +25168,7 @@
       "purpose": "Cheque #017236 clearance / deposit from M/S TOP ROCK INTERIORS LLC",
       "status": "Cleared",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 07:56:16"
     },
     {
       "id": "wire-chq-chq-rcp-rec-mvy4dz7o",
@@ -25534,7 +25690,7 @@
       "purpose": "Cheque #014502 clearance / deposit from M/S TOP ROCK INTERIORS LLC",
       "status": "Cleared",
       "created_at": "2026-11-25 07:56:14",
-      "updated_at": "2026-11-25 07:56:14"
+      "updated_at": "2026-11-25 07:56:16"
     },
     {
       "id": "wire-rcp-rec-mvwphhbz",
@@ -25574,6 +25730,25 @@
       "status": "Cleared",
       "created_at": "2026-11-25 07:56:14",
       "updated_at": "2026-11-25 07:56:14"
+    },
+    {
+      "id": "wire-1795598559234",
+      "company_id": "rayan-corp-uae",
+      "reference_no": "SAL-Oct2026-EN12006",
+      "transfer_date": "2026-10-10",
+      "date": "2026-10-10",
+      "source_account_id": "bank-adcb-uae",
+      "source_bank": "Abu Dhabi Commercial Bank (ADCB)",
+      "destination_account_id": "",
+      "destination_bank": "Lulu Exchange",
+      "counterparty": "M/S Kamala Chhetri (EN12006)",
+      "type": "outward_wire",
+      "amount": "25800.00",
+      "currency": "AED",
+      "purpose": "Salary Payout for 2023 Oct 2026 to Kamala Chhetri (PSOct2026/EN12006)",
+      "status": "Cleared",
+      "created_at": "2026-11-25 09:22:39",
+      "updated_at": "2026-11-25 09:22:39"
     }
   ],
   "cash_vouchers": [
@@ -26439,7 +26614,7 @@
       "currency": "AED",
       "reference_no": "ATM-ADCB-47231",
       "status": "Approved",
-      "created_at": "2026-11-25T07:56:16+00:00",
+      "created_at": "2026-11-25T09:38:19+00:00",
       "voucher_date": "2026-11-18",
       "updated_at": "2026-11-25 07:56:14"
     },
@@ -26534,6 +26709,30 @@
     "RAYAN E-Wallets"
   ],
   "work_completion_certificates": [
+    {
+      "id": "wcc-1795594406969",
+      "cert_no": "REC-JOB COM-11021",
+      "reference_no": "REC-JOB COM-11021",
+      "date": "2026-11-25",
+      "time": "12:13 PM",
+      "subcontract_agreement": "LPO/BD/2026/12",
+      "client_name": "M/S BUILDARA GENERAL CONTRACTING - L.L.C",
+      "main_client": "M/S BUILDARA GENERAL CONTRACTING - L.L.C",
+      "contact_person": "Mr.Sooraj Kumar",
+      "email": "buildaradevelopers@gmail.com",
+      "project_name": "Yateem Optician, Khalidiyah Mall, Abu Dhabi",
+      "scope_work_ref": "IB-037-136",
+      "scope_description": "Civil & Interior Work",
+      "body_text": "With respect to the subjected agreement We, Rayan Engineering and Contracting LLC-SPC Confirm and Certify that all the works mentioned in the attached scope of work (LPO/BD/2026/12) Have been Satisfactorily Executed and Completed.\n\n\nWe wish to take this opportunity to request a work completion certificate.\nIt would also be great if you detailed my accomplishment in this project to make it more powerful and we will be forever grateful for doing this\n\nI accept the above works on behalf of M/S BUILDARA GENERAL CONTRACTING - L.L.C, to be complete and to my satisfaction by Rayan Engineering and Contracting LLC-SPC as specified in the PO.",
+      "acceptance_statement": "I accept the above works on behalf of M/S BUILDARA GENERAL CONTRACTING - L.L.C, to be complete and to my satisfaction by Rayan Engineering and Contracting LLC-SPC as specified in the PO.",
+      "authorized_signatory_client": "Mr.Sooraj Kumar",
+      "authorized_signatory_rayan": "Mohammad Suhel",
+      "include_stamp": true,
+      "include_signature": true,
+      "status": "Approved",
+      "po_no": "LPO/BD/2026/12",
+      "updated_at": "2026-11-25T08:17:03.763Z"
+    },
     {
       "id": "wcc-1795527633857",
       "cert_no": "REC-JOB COM-11019",
@@ -26998,8 +27197,8 @@
     },
     {
       "id": "wcc-rec-job-com-11021",
-      "cert_no": "REC-JOB COM-11021",
-      "reference_no": "REC-JOB COM-11021",
+      "cert_no": "REC-JOB COM-11010",
+      "reference_no": "REC-JOB COM-11010",
       "date": "2026-07-15",
       "time": "4:15 PM",
       "subcontract_agreement": "PODSUB-2026/0810",
@@ -27024,7 +27223,8 @@
       "authorized_signatory_client": "Mr. Shahil",
       "authorized_signatory_rayan": "Eng. Bakhteyar Alam",
       "include_stamp": true,
-      "include_signature": true
+      "include_signature": true,
+      "updated_at": "2026-11-25T08:13:09.308Z"
     }
   ],
   "delivery_notes": [
@@ -27759,23 +27959,23 @@
       "nationality": "India",
       "date_of_joining": "2025-08-10",
       "date_of_appointment": "2025-08-10",
-      "end_date": "2024-10-20",
-      "resignation_date": "2024-10-20",
-      "date_of_leaving": "2024-10-20",
-      "end_reason": "Employee takes leave and does not return to work",
-      "resignation_reason": "Employee takes leave and does not return to work",
+      "end_date": "",
+      "resignation_date": "",
+      "date_of_leaving": "",
+      "end_reason": "",
+      "resignation_reason": "",
       "phone": "+971528990903",
       "email": "bakhteyarnke@gmail.com",
       "emirates_id": "784-1996-4684544-8",
       "photo": "data:image/jpeg;base64,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",
-      "address": "Al Danah Sector E-16, Abu Dhabi, UAE",
-      "local_address": "Al Danah Sector E-16, Abu Dhabi, UAE",
-      "permanent_address": "Village & P.O. Gopalganj, Bihar, India",
+      "address": "Musafah M36 Near Rayan Group Office Industrail Area Abu Dhabi",
+      "local_address": "Musafah M36 Near Rayan Group Office Industrail Area Abu Dhabi",
+      "permanent_address": "Baitapur Post Rajpur Madan Ps. Shikarpur Dist. West Champran Bihar",
       "emergency_contact_name": "Mokhtar Ahamad",
       "emergency_contact_relation": "Father",
       "emergency_contact_phone": "+919931371186",
       "visa_status": "Employment Visa (Rayan Engineering)",
-      "visa_expiry_date": "2027-08-07",
+      "visa_expiry_date": "",
       "labor_card_no": "784198812345",
       "basic_salary": "16000.00",
       "accommodation_allowance": "4000.00",
@@ -27791,9 +27991,9 @@
       "status": "Active",
       "eligible_for_rehire": "yes",
       "rehire_notes": "",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:19:58",
       "joining_date": "2025-08-10",
-      "created_at": "2026-11-25 07:56:14",
+      "created_at": "2026-11-25 09:19:58",
       "currency": "AED",
       "nationality_ar": "هندي",
       "gender": "Male",
@@ -28333,6 +28533,295 @@
   ],
   "payroll": [
     {
+      "id": "ps-mwvx9mxd",
+      "slip_no": "PSOct2026/EN12009",
+      "company_id": "rayan-corp-uae",
+      "employee_id": "emp-en12009",
+      "employee_no": "EN12009",
+      "employee_name": "Bakhteyar Alam Mokhtar Ahmad",
+      "position": "Civil Engineer",
+      "department": "Rayan Engineering",
+      "date_of_appointment": "2025-08-10",
+      "currency": "AED",
+      "month_year": "Aug25 - Oct 2026",
+      "period_label": "Aug25 - Oct 2026",
+      "printed_date": "2026-10-10",
+      "payment_date": "2026-10-10",
+      "basic_salary": "36000.00",
+      "accommodation_allowance": "0.00",
+      "consolidated_allowance": "354000.00",
+      "normal_overtime": 0,
+      "overtime_hrs": "0.0",
+      "total_earnings": "390000.00",
+      "advance_deduction": 0,
+      "absence_deduction": 0,
+      "loan_deduction": 0,
+      "total_deductions": "0.00",
+      "net_pay": "390000.00",
+      "breakdown_items": [
+        {
+          "date": "2026-10-10",
+          "element_name": "Basic Salary",
+          "element_type": "Standard Earnings",
+          "remark": "Standard Monthly Base",
+          "hrs": "",
+          "amount": 36000
+        },
+        {
+          "date": "2026-10-10",
+          "element_name": "Accommodation Allowance",
+          "element_type": "Standard Earnings",
+          "remark": "Executive Housing",
+          "hrs": "",
+          "amount": 0
+        },
+        {
+          "date": "2026-10-10",
+          "element_name": "Consolidated Allowance",
+          "element_type": "Standard Earnings",
+          "remark": "Site Transport & Perks",
+          "hrs": "",
+          "amount": 354000
+        }
+      ],
+      "bank_name": "Emirates NBD Bank PJSC",
+      "swift": "EBILAEADXXX",
+      "iban": "AE860260001015934645101",
+      "account_no": "AE860260001015934645101",
+      "pay_method": "RAYAN E-Wallets / Cash",
+      "transferred_amount": 390000,
+      "status": "Pending",
+      "payout_source_type": "cash",
+      "payout_source_id": "cash-mw5esv3w",
+      "payout_source_name": "RAYAN E-Wallets",
+      "payout_reference": "SAL-Oct2026-EN12009",
+      "project_id": "",
+      "project_name": "Corporate / General Overhead",
+      "updated_at": "2026-11-25 09:29:36",
+      "overtime_amount": "0.00",
+      "payment_method": "RAYAN E-Wallets / Cash",
+      "payment_source_type": "cash",
+      "payment_source_id": "cash-mw5esv3w",
+      "payment_source_name": "RAYAN E-Wallets",
+      "created_at": "2026-11-25 09:29:36"
+    },
+    {
+      "id": "ps-mwvx4bg1",
+      "slip_no": "PSOct2026/EN12008",
+      "company_id": "rayan-corp-uae",
+      "employee_id": "emp-en12008",
+      "employee_no": "EN12008",
+      "employee_name": "Muhammad Adnan Ur Rehman Abdul Rehman",
+      "position": "Light  Vehicle Driver",
+      "department": "Rayan Engineering",
+      "date_of_appointment": "2024-07-01",
+      "month_year": "2024-Oct 2026",
+      "period_label": "2024-Oct 2026",
+      "printed_date": "2026-10-10",
+      "payment_date": "2026-10-10",
+      "basic_salary": "600.00",
+      "accommodation_allowance": "0.00",
+      "consolidated_allowance": "15600.00",
+      "normal_overtime": 0,
+      "overtime_hrs": "0.0",
+      "total_earnings": "16200.00",
+      "advance_deduction": 0,
+      "absence_deduction": 0,
+      "loan_deduction": 0,
+      "total_deductions": "0.00",
+      "net_pay": "16200.00",
+      "breakdown_items": [
+        {
+          "date": "2026-10-10",
+          "element_name": "Basic Salary",
+          "element_type": "Standard Earnings",
+          "remark": "Standard Monthly Base",
+          "hrs": "",
+          "amount": 600
+        },
+        {
+          "date": "2026-10-10",
+          "element_name": "Accommodation Allowance",
+          "element_type": "Standard Earnings",
+          "remark": "Executive Housing",
+          "hrs": "",
+          "amount": 0
+        },
+        {
+          "date": "2026-10-10",
+          "element_name": "Consolidated Allowance",
+          "element_type": "Standard Earnings",
+          "remark": "Site Transport & Perks",
+          "hrs": "",
+          "amount": 15600
+        }
+      ],
+      "bank_name": "Lulu Exchange",
+      "swift": "EBILAEADXXX",
+      "iban": "",
+      "account_no": "",
+      "pay_method": "RAYAN E-Wallets / Cash",
+      "transferred_amount": 16200,
+      "status": "Pending",
+      "payout_source_type": "cash",
+      "payout_source_id": "cash-mw5esv3w",
+      "payout_source_name": "RAYAN E-Wallets",
+      "payout_reference": "SAL-Oct2026-EN12006",
+      "project_id": "",
+      "project_name": "Corporate / General Overhead",
+      "updated_at": "2026-11-25 09:25:27",
+      "overtime_amount": "0.00",
+      "payment_method": "RAYAN E-Wallets / Cash",
+      "payment_source_type": "cash",
+      "payment_source_id": "cash-mw5esv3w",
+      "payment_source_name": "RAYAN E-Wallets",
+      "created_at": "2026-11-25 09:25:27"
+    },
+    {
+      "id": "ps-mwvx36j7",
+      "slip_no": "PSOct2026/EN12007",
+      "company_id": "rayan-corp-uae",
+      "employee_id": "emp-en12007",
+      "employee_no": "EN12007",
+      "employee_name": "Mohammad Kaif Asgar Ali",
+      "position": "Carpentry Work Supervisor",
+      "department": "Rayan Engineering",
+      "date_of_appointment": "2023-06-20",
+      "month_year": "2023 - Oct 2026",
+      "period_label": "2023 - Oct 2026",
+      "printed_date": "2026-10-10",
+      "payment_date": "2026-10-10",
+      "basic_salary": "600.00",
+      "accommodation_allowance": "0.00",
+      "consolidated_allowance": "23400.00",
+      "normal_overtime": 0,
+      "overtime_hrs": "0.0",
+      "total_earnings": "24000.00",
+      "advance_deduction": 0,
+      "absence_deduction": 0,
+      "loan_deduction": 0,
+      "total_deductions": "0.00",
+      "net_pay": "24000.00",
+      "breakdown_items": [
+        {
+          "date": "2026-10-10",
+          "element_name": "Basic Salary",
+          "element_type": "Standard Earnings",
+          "remark": "Standard Monthly Base",
+          "hrs": "",
+          "amount": 600
+        },
+        {
+          "date": "2026-10-10",
+          "element_name": "Accommodation Allowance",
+          "element_type": "Standard Earnings",
+          "remark": "Executive Housing",
+          "hrs": "",
+          "amount": 0
+        },
+        {
+          "date": "2026-10-10",
+          "element_name": "Consolidated Allowance",
+          "element_type": "Standard Earnings",
+          "remark": "Site Transport & Perks",
+          "hrs": "",
+          "amount": 23400
+        }
+      ],
+      "bank_name": "Lulu Exchange",
+      "swift": "EBILAEADXXX",
+      "iban": "",
+      "account_no": "",
+      "pay_method": "RAYAN E-Wallets / Cash",
+      "transferred_amount": 24000,
+      "status": "Pending",
+      "payout_source_type": "cash",
+      "payout_source_id": "cash-mw5esv3w",
+      "payout_source_name": "RAYAN E-Wallets",
+      "payout_reference": "SAL-Oct2026-EN12006",
+      "project_id": "",
+      "project_name": "Corporate / General Overhead",
+      "updated_at": "2026-11-25 09:24:35",
+      "overtime_amount": "0.00",
+      "payment_method": "RAYAN E-Wallets / Cash",
+      "payment_source_type": "cash",
+      "payment_source_id": "cash-mw5esv3w",
+      "payment_source_name": "RAYAN E-Wallets",
+      "created_at": "2026-11-25 09:24:35"
+    },
+    {
+      "id": "ps-mwvx0hif",
+      "slip_no": "PSOct2026/EN12006",
+      "company_id": "rayan-corp-uae",
+      "employee_id": "emp-en12006",
+      "employee_no": "EN12006",
+      "employee_name": "Kamala Chhetri",
+      "position": "Messenger",
+      "department": "Rayan Engineering",
+      "date_of_appointment": "2023-03-21",
+      "month_year": "Jul-26",
+      "period_label": "July 2026",
+      "printed_date": "2026-10-10",
+      "payment_date": "2026-10-10",
+      "basic_salary": "600.00",
+      "accommodation_allowance": "0.00",
+      "consolidated_allowance": "25200.00",
+      "normal_overtime": 0,
+      "overtime_hrs": "0.0",
+      "total_earnings": "25800.00",
+      "advance_deduction": 0,
+      "absence_deduction": 0,
+      "loan_deduction": 0,
+      "total_deductions": "0.00",
+      "net_pay": "25800.00",
+      "breakdown_items": [
+        {
+          "date": "2026-10-10",
+          "element_name": "Basic Salary",
+          "element_type": "Standard Earnings",
+          "remark": "Standard Monthly Base",
+          "hrs": "",
+          "amount": 600
+        },
+        {
+          "date": "2026-10-10",
+          "element_name": "Accommodation Allowance",
+          "element_type": "Standard Earnings",
+          "remark": "Executive Housing",
+          "hrs": "",
+          "amount": 0
+        },
+        {
+          "date": "2026-10-10",
+          "element_name": "Consolidated Allowance",
+          "element_type": "Standard Earnings",
+          "remark": "Site Transport & Perks",
+          "hrs": "",
+          "amount": 25200
+        }
+      ],
+      "bank_name": "Lulu Exchange",
+      "swift": "EBILAEADXXX",
+      "iban": "",
+      "account_no": "",
+      "pay_method": "RAYAN E-Wallets / Cash",
+      "transferred_amount": 25800,
+      "status": "Pending",
+      "payout_source_type": "cash",
+      "payout_source_id": "cash-mw5esv3w",
+      "payout_source_name": "RAYAN E-Wallets",
+      "payout_reference": "SAL-2023Oct2026-EN12006",
+      "project_id": "",
+      "project_name": "Corporate / General Overhead",
+      "updated_at": "2026-11-25 09:23:04",
+      "overtime_amount": "0.00",
+      "payment_method": "RAYAN E-Wallets / Cash",
+      "payment_source_type": "cash",
+      "payment_source_id": "cash-mw5esv3w",
+      "payment_source_name": "RAYAN E-Wallets",
+      "created_at": "2026-11-25 09:23:04"
+    },
+    {
       "id": "ps-mwrlxnf6",
       "slip_no": "PSOct2024/EN12005",
       "company_id": "rayan-corp-uae",
@@ -28342,21 +28831,21 @@
       "position": "Sales Officer",
       "department": "Rayan Engineering",
       "date_of_appointment": "2024-04-01",
-      "month_year": "Apr24 To Oct24",
-      "period_label": "Apr24 To Oct24",
+      "month_year": "Jul-26",
+      "period_label": "July 2026",
       "printed_date": "2024-10-22",
       "payment_date": "2024-10-22",
-      "basic_salary": "7000.00",
+      "basic_salary": "1000.00",
       "accommodation_allowance": "0.00",
-      "consolidated_allowance": "0.00",
+      "consolidated_allowance": "5000.00",
       "normal_overtime": 0,
       "overtime_hrs": "0.0",
-      "total_earnings": "7000.00",
+      "total_earnings": "6000.00",
       "advance_deduction": 0,
       "absence_deduction": 0,
       "loan_deduction": 0,
       "total_deductions": "0.00",
-      "net_pay": "7000.00",
+      "net_pay": "6000.00",
       "breakdown_items": [
         {
           "date": "2024-10-22",
@@ -28364,7 +28853,7 @@
           "element_type": "Standard Earnings",
           "remark": "Standard Monthly Base",
           "hrs": "",
-          "amount": 7000
+          "amount": 1000
         },
         {
           "date": "2024-10-22",
@@ -28380,7 +28869,7 @@
           "element_type": "Standard Earnings",
           "remark": "Site Transport & Perks",
           "hrs": "",
-          "amount": 0
+          "amount": 5000
         }
       ],
       "bank_name": "Emirates NBD Bank PJSC",
@@ -28388,21 +28877,21 @@
       "iban": "",
       "account_no": "",
       "pay_method": "RAYAN E-Wallets / Cash",
-      "transferred_amount": 7000,
+      "transferred_amount": 6000,
       "status": "Pending",
       "payout_source_type": "cash",
       "payout_source_id": "cash-mw5esv3w",
       "payout_source_name": "RAYAN E-Wallets",
-      "payout_reference": "TXN-PAYROLL-20241022-EN12005",
+      "payout_reference": "SAL-Apr24ToOct24-EN12005",
       "project_id": "",
       "project_name": "Corporate / General Overhead",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:09:28",
       "overtime_amount": "0.00",
       "payment_method": "RAYAN E-Wallets / Cash",
       "payment_source_type": "cash",
       "payment_source_id": "cash-mw5esv3w",
       "payment_source_name": "RAYAN E-Wallets",
-      "created_at": "2026-11-25 07:56:14"
+      "created_at": "2026-11-25 09:09:28"
     },
     {
       "id": "ps-mwrlvd9q",
@@ -28415,21 +28904,21 @@
       "department": "Rayan Engineering",
       "date_of_appointment": "2023-08-22",
       "currency": "AED",
-      "month_year": "Aug23 To Oct24",
-      "period_label": "Aug23 To Oct24",
+      "month_year": "Jul-26",
+      "period_label": "July 2026",
       "printed_date": "2024-10-30",
       "payment_date": "2024-10-30",
-      "basic_salary": "15000.00",
+      "basic_salary": "800.00",
       "accommodation_allowance": "0.00",
-      "consolidated_allowance": "0.00",
+      "consolidated_allowance": "10400.00",
       "normal_overtime": 0,
-      "overtime_hrs": "0.0",
-      "total_earnings": "15000.00",
+      "overtime_hrs": "",
+      "total_earnings": "11200.00",
       "advance_deduction": 0,
       "absence_deduction": 0,
       "loan_deduction": 0,
       "total_deductions": "0.00",
-      "net_pay": "15000.00",
+      "net_pay": "11200.00",
       "breakdown_items": [
         {
           "date": "2024-10-30",
@@ -28437,7 +28926,7 @@
           "element_type": "Standard Earnings",
           "remark": "Standard Monthly Base",
           "hrs": "",
-          "amount": 15000
+          "amount": 800
         },
         {
           "date": "2024-10-30",
@@ -28453,7 +28942,7 @@
           "element_type": "Standard Earnings",
           "remark": "Site Transport & Perks",
           "hrs": "",
-          "amount": 0
+          "amount": 10400
         }
       ],
       "bank_name": "Emirates NBD Bank PJSC",
@@ -28461,21 +28950,21 @@
       "iban": "",
       "account_no": "",
       "pay_method": "RAYAN E-Wallets / Cash",
-      "transferred_amount": 15000,
+      "transferred_amount": 11200,
       "status": "Pending",
       "payout_source_type": "cash",
       "payout_source_id": "cash-mw5esv3w",
       "payout_source_name": "RAYAN E-Wallets",
-      "payout_reference": "TXN-PAYROLL-20241030-EN12004",
+      "payout_reference": "SAL-Aug23ToOct24-EN12004",
       "project_id": "",
       "project_name": "Corporate / General Overhead",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:08:31",
       "overtime_amount": "0.00",
       "payment_method": "RAYAN E-Wallets / Cash",
       "payment_source_type": "cash",
       "payment_source_id": "cash-mw5esv3w",
       "payment_source_name": "RAYAN E-Wallets",
-      "created_at": "2026-11-25 07:56:14"
+      "created_at": "2026-11-25 09:08:31"
     },
     {
       "id": "ps-mwrlrvr6",
@@ -28487,21 +28976,21 @@
       "position": "Gypsum Carpenter",
       "department": "Rayan Engineering",
       "date_of_appointment": "2023-07-26",
-      "month_year": "Aug23 To Jul25",
-      "period_label": "Aug23 To Jul25",
+      "month_year": "Jul-26",
+      "period_label": "July 2026",
       "printed_date": "2025-07-31",
       "payment_date": "2025-07-31",
-      "basic_salary": "24000.00",
+      "basic_salary": "800.00",
       "accommodation_allowance": "0.00",
-      "consolidated_allowance": "0.00",
+      "consolidated_allowance": "18400.00",
       "normal_overtime": 0,
       "overtime_hrs": "0.0",
-      "total_earnings": "24000.00",
+      "total_earnings": "19200.00",
       "advance_deduction": 0,
       "absence_deduction": 0,
       "loan_deduction": 0,
       "total_deductions": "0.00",
-      "net_pay": "24000.00",
+      "net_pay": "19200.00",
       "breakdown_items": [
         {
           "date": "2025-07-31",
@@ -28509,7 +28998,7 @@
           "element_type": "Standard Earnings",
           "remark": "Standard Monthly Base",
           "hrs": "",
-          "amount": 24000
+          "amount": 800
         },
         {
           "date": "2025-07-31",
@@ -28525,7 +29014,7 @@
           "element_type": "Standard Earnings",
           "remark": "Site Transport & Perks",
           "hrs": "",
-          "amount": 0
+          "amount": 18400
         }
       ],
       "bank_name": "Emirates NBD Bank PJSC",
@@ -28533,21 +29022,21 @@
       "iban": "",
       "account_no": "",
       "pay_method": "RAYAN E-Wallets / Cash",
-      "transferred_amount": 24000,
+      "transferred_amount": 19200,
       "status": "Pending",
       "payout_source_type": "cash",
       "payout_source_id": "cash-mw5esv3w",
       "payout_source_name": "RAYAN E-Wallets",
-      "payout_reference": "TXN-PAYROLL-20250731-EN12003",
+      "payout_reference": "SAL-Aug23ToJul25-EN12003",
       "project_id": "",
       "project_name": "Corporate / General Overhead",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:11:00",
       "overtime_amount": "0.00",
       "payment_method": "RAYAN E-Wallets / Cash",
       "payment_source_type": "cash",
       "payment_source_id": "cash-mw5esv3w",
       "payment_source_name": "RAYAN E-Wallets",
-      "created_at": "2026-11-25 07:56:14"
+      "created_at": "2026-11-25 09:11:00"
     },
     {
       "id": "ps-mwrln6on",
@@ -28559,21 +29048,21 @@
       "position": "Sales Officer",
       "department": "Rayan Engineering",
       "date_of_appointment": "2024-03-26",
-      "month_year": "Apr24 To Aug25",
-      "period_label": "Apr24 To Aug25",
+      "month_year": "Jul-26",
+      "period_label": "July 2026",
       "printed_date": "2025-08-26",
       "payment_date": "2025-08-26",
-      "basic_salary": "42500.00",
+      "basic_salary": "2500.00",
       "accommodation_allowance": "0.00",
-      "consolidated_allowance": "0.00",
+      "consolidated_allowance": "30000.00",
       "normal_overtime": 0,
       "overtime_hrs": "0.0",
-      "total_earnings": "42500.00",
+      "total_earnings": "32500.00",
       "advance_deduction": 0,
       "absence_deduction": 0,
       "loan_deduction": 0,
       "total_deductions": "0.00",
-      "net_pay": "42500.00",
+      "net_pay": "32500.00",
       "breakdown_items": [
         {
           "date": "2025-08-26",
@@ -28581,7 +29070,7 @@
           "element_type": "Standard Earnings",
           "remark": "Standard Monthly Base",
           "hrs": "",
-          "amount": 42500
+          "amount": 2500
         },
         {
           "date": "2025-08-26",
@@ -28597,7 +29086,7 @@
           "element_type": "Standard Earnings",
           "remark": "Site Transport & Perks",
           "hrs": "",
-          "amount": 0
+          "amount": 30000
         }
       ],
       "bank_name": "Emirates NBD Bank PJSC",
@@ -28605,21 +29094,21 @@
       "iban": "",
       "account_no": "",
       "pay_method": "RAYAN E-Wallets / Cash",
-      "transferred_amount": 42500,
+      "transferred_amount": 32500,
       "status": "Pending",
       "payout_source_type": "cash",
       "payout_source_id": "cash-mw5esv3w",
       "payout_source_name": "RAYAN E-Wallets",
-      "payout_reference": "TXN-PAYROLL-20250826-EN12002",
+      "payout_reference": "SAL-Apr24ToAug25-EN12002",
       "project_id": "",
       "project_name": "Corporate / General Overhead",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:12:06",
       "overtime_amount": "0.00",
       "payment_method": "RAYAN E-Wallets / Cash",
       "payment_source_type": "cash",
       "payment_source_id": "cash-mw5esv3w",
       "payment_source_name": "RAYAN E-Wallets",
-      "created_at": "2026-11-25 07:56:14"
+      "created_at": "2026-11-25 09:12:06"
     },
     {
       "id": "ps-mwrlgatt",
@@ -28631,8 +29120,8 @@
       "position": "Civil Engineer",
       "department": "Rayan Engineering",
       "date_of_appointment": "2023-07-14",
-      "month_year": "July-23 To Feb25",
-      "period_label": "July-23 To Feb25",
+      "month_year": "Jul-26",
+      "period_label": "July 2026",
       "printed_date": "2025-02-22",
       "payment_date": "2025-02-22",
       "basic_salary": "10000.00",
@@ -28682,16 +29171,16 @@
       "payout_source_type": "cash",
       "payout_source_id": "cash-mw5esv3w",
       "payout_source_name": "RAYAN E-Wallets",
-      "payout_reference": "TXN-PAYROLL-20250222-EN12001",
+      "payout_reference": "SAL-July-23To Feb25-EN12001",
       "project_id": "",
       "project_name": "Corporate / General Overhead",
-      "updated_at": "2026-11-25 07:56:14",
+      "updated_at": "2026-11-25 09:13:09",
       "overtime_amount": "0.00",
       "payment_method": "RAYAN E-Wallets / Cash",
       "payment_source_type": "cash",
       "payment_source_id": "cash-mw5esv3w",
       "payment_source_name": "RAYAN E-Wallets",
-      "created_at": "2026-11-25 07:56:14"
+      "created_at": "2026-11-25 09:13:09"
     }
   ],
   "employment_certificates": [

@@ -1485,7 +1485,7 @@ class FinanceApp {
       inv44014.status = 'paid';
       inv44014.amount_in_words = 'Twenty Thousand Forty Four and One Fils AED Only.';
     }
-    const rcp44031 = (this.db.customer_receipts || []).find(r => r.id === 'rec-mvy4fwvn' || r.receipt_no === 'REC-RV-44031' || r.reference_no === '017236');
+    const rcp44031 = (this.db.customer_receipts || []).find(r => r.id === 'rec-mvy4fwvn' || r.reference_no === '017236');
     if (rcp44031) {
       rcp44031.amount_received = '20044.01';
       rcp44031.allocated_amount = 20044.01;
@@ -1951,15 +1951,49 @@ class FinanceApp {
         }
       });
 
-      // Calculate live balances based on vouchers
+      // Calculate live balances based on vouchers (supporting register_id, cash_in_hand_id, or register_name fallback)
       const vaultsMap = {};
+      const vaultsHasVouchers = {};
+      const vaultNameToId = {};
+      let primaryUaeVaultId = 'cash-mw5esv3w';
       this.db.cash_in_hand.forEach(v => {
         vaultsMap[v.id] = 0;
+        vaultsHasVouchers[v.id] = false;
+        if (v.register_name) {
+          vaultNameToId[String(v.register_name).trim().toLowerCase()] = v.id;
+        }
+        if (v.id === 'cash-mw5esv3w' || v.is_primary || (v.register_name || '').toLowerCase().includes('rayan e-wallet')) {
+          primaryUaeVaultId = v.id;
+        }
       });
       (this.db.cash_vouchers || []).forEach(cv => {
-        const regId = cv.register_id;
+        if (!cv) return;
+        const stLower = String(cv.status || '').toLowerCase();
+        if (stLower === 'void' || stLower === 'cancelled') return;
+        if (!cv.date && cv.voucher_date) cv.date = cv.voucher_date;
+
+        let regId = cv.register_id || cv.cash_in_hand_id || '';
+        if (!regId && cv.register_name) {
+          regId = vaultNameToId[String(cv.register_name).trim().toLowerCase()] || '';
+        }
+        if (!regId) {
+          const catLow = String(cv.category || '').toLowerCase();
+          const vNoUp = String(cv.voucher_no || '').toUpperCase();
+          if ((catLow.includes('salary') || catLow.includes('payroll') || vNoUp.startsWith('TXN-PAYROLL')) && (!cv.company_id || cv.company_id === 'rayan-corp-uae')) {
+            regId = primaryUaeVaultId;
+          }
+        }
+        if (regId && !cv.register_id) {
+          cv.register_id = regId;
+        }
+        const matchedReg = this.db.cash_in_hand.find(v => v.id === regId);
+        if (matchedReg && !cv.register_name) {
+          cv.register_name = matchedReg.register_name;
+        }
+
         const amt = Number(cv.amount) || 0;
         if (vaultsMap[regId] !== undefined) {
+          vaultsHasVouchers[regId] = true;
           if (cv.type === 'inflow') {
             vaultsMap[regId] += amt;
           } else {
@@ -1968,10 +2002,8 @@ class FinanceApp {
         }
       });
       this.db.cash_in_hand.forEach(v => {
-        if (v.id === 'cash-mw5esv3w') {
+        if (v.id === 'cash-mw5esv3w' || vaultsHasVouchers[v.id]) {
           v.balance = Math.round((vaultsMap[v.id] || 0) * 100) / 100;
-        } else if (vaultsMap[v.id] !== undefined && vaultsMap[v.id] !== 0) {
-          v.balance = Math.round(vaultsMap[v.id] * 100) / 100;
         }
       });
     }
@@ -2453,7 +2485,7 @@ class FinanceApp {
       }
     }
 
-    // Dynamic bank balance calculation: Non-cash customer collections minus outward disbursements
+    // Dynamic bank balance calculation: Non-cash customer collections (+ direct cash deposits to ADCB) minus ADCB outward disbursements
     if (Array.isArray(this.db.bank_accounts)) {
       const adcb = this.db.bank_accounts.find(b => b.id === 'bank-adcb-uae');
       if (adcb) {
@@ -2466,7 +2498,14 @@ class FinanceApp {
         });
         let bankOut = 0;
         (this.db.bank_transfers || []).forEach(t => {
-          if ((t.company_id || 'rayan-corp-uae') === 'rayan-corp-uae' && (t.type === 'outward' || t.type === 'bank_to_cash' || t.type !== 'inward')) {
+          if ((t.company_id || 'rayan-corp-uae') !== 'rayan-corp-uae') return;
+          if (t.type === 'inward') {
+            if (String(t.id || '').startsWith('wire-dep-') && (!t.destination_account_id || t.destination_account_id === 'bank-adcb-uae')) {
+              bankIn += (Number(t.amount) || 0);
+            }
+            return;
+          }
+          if (!t.source_account_id || t.source_account_id === 'bank-adcb-uae') {
             bankOut += (Number(t.amount) || 0);
           }
         });
@@ -2580,7 +2619,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v201';
+    const CURRENT_DB_VERSION = 'v2026_clean_v202';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.removeItem('rayan_fin_deleted_employee_ids');
@@ -3179,9 +3218,26 @@ class FinanceApp {
     }
 
     if (action === 'delete_bank_transfer' && payload.id) {
+      const tId = payload.id;
+      const tRef = payload.reference_no || '';
       if (this.db.bank_transfers) {
-        this.db.bank_transfers = this.db.bank_transfers.filter(t => t.id !== payload.id);
+        const delTrns = this.db.bank_transfers.filter(t => t.id === tId || (tRef && t.reference_no === tRef));
+        delTrns.forEach(dt => {
+          if (dt.type !== 'inward' && dt.source_account_id && dt.source_account_id !== 'bank-adcb-uae' && Array.isArray(this.db.bank_accounts)) {
+            const ba = this.db.bank_accounts.find(b => b.id === dt.source_account_id);
+            if (ba) ba.balance = Math.round(((Number(ba.balance) || 0) + (Number(dt.amount) || 0)) * 100) / 100;
+          }
+          if (Array.isArray(this.db.payroll) && (dt.payroll_id || dt.slip_no)) {
+            this.db.payroll.forEach(p => {
+              if ((dt.payroll_id && p.id === dt.payroll_id) || (dt.slip_no && p.slip_no === dt.slip_no)) {
+                p.status = 'Pending';
+              }
+            });
+          }
+        });
+        this.db.bank_transfers = this.db.bank_transfers.filter(t => t.id !== tId && (!tRef || t.reference_no !== tRef));
       }
+      this.normalizeAllBalances();
       this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
@@ -3251,9 +3307,22 @@ class FinanceApp {
     }
 
     if (action === 'delete_cash_voucher' && payload.id) {
+      const vId = payload.id;
+      const vNo = payload.voucher_no || '';
       if (this.db.cash_vouchers) {
-        this.db.cash_vouchers = this.db.cash_vouchers.filter(v => v.id !== payload.id);
+        const delCvs = this.db.cash_vouchers.filter(v => v.id === vId || v.voucher_no === vId || (vNo && v.voucher_no === vNo));
+        if (Array.isArray(this.db.payroll)) {
+          delCvs.forEach(dc => {
+            this.db.payroll.forEach(p => {
+              if ((dc.payroll_id && p.id === dc.payroll_id) || (dc.slip_no && p.slip_no === dc.slip_no) || (p.slip_no && dc.purpose && dc.purpose.includes(p.slip_no))) {
+                p.status = 'Pending';
+              }
+            });
+          });
+        }
+        this.db.cash_vouchers = this.db.cash_vouchers.filter(v => v.id !== vId && v.voucher_no !== vId && (!vNo || v.voucher_no !== vNo));
       }
+      this.normalizeAllBalances();
       this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
@@ -9758,14 +9827,21 @@ class FinanceApp {
     });
 
     let totalOutward = 0;
+    let extraBankInward = 0;
     transfers.forEach(t => {
       const amt = Number(t.amount) || 0;
-      if (t.type !== 'inward') {
+      if (t.type === 'inward') {
+        if (String(t.id || '').startsWith('wire-dep-') && (!t.destination_account_id || t.destination_account_id === 'bank-adcb-uae')) {
+          extraBankInward += amt;
+        }
+        return;
+      }
+      if (!t.source_account_id || t.source_account_id === 'bank-adcb-uae') {
         totalOutward += amt;
       }
     });
 
-    const totalInward = rcpOnline + rcpCheque;
+    const totalInward = rcpOnline + rcpCheque + extraBankInward;
     const totalOnlineInward = rcpOnline;
     const totalChequeInward = rcpCheque;
     const totalTreasury = Math.max(0, Math.round((totalInward - totalOutward) * 100) / 100);
@@ -10030,6 +10106,7 @@ class FinanceApp {
   }
 
   renderCashInHandTab(root) {
+    this.normalizeAllBalances();
     const registers = (this.db?.cash_in_hand || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     const vouchers = (this.db?.cash_vouchers || [])
       .filter(v => (v.company_id || 'rayan-corp-uae') === this.activeCompanyId)
@@ -27280,9 +27357,21 @@ Scope of Work & Technical Execution:
     const tRef = trn ? (trn.reference_no || '') : '';
     if (!confirm(`Are you sure you want to delete bank wire record "${label}"?`)) return;
 
+    if (trn && trn.type !== 'inward' && trn.source_account_id && trn.source_account_id !== 'bank-adcb-uae' && Array.isArray(this.db?.bank_accounts)) {
+      const ba = this.db.bank_accounts.find(b => b.id === trn.source_account_id);
+      if (ba) ba.balance = Math.round(((Number(ba.balance) || 0) + (Number(trn.amount) || 0)) * 100) / 100;
+    }
+    if (trn && Array.isArray(this.db?.payroll)) {
+      this.db.payroll.forEach(p => {
+        if ((trn.payroll_id && p.id === trn.payroll_id) || (trn.slip_no && p.slip_no === trn.slip_no) || (p.slip_no && trn.purpose && trn.purpose.includes(p.slip_no))) {
+          p.status = 'Pending';
+        }
+      });
+    }
     if (this.db?.bank_transfers) {
       this.db.bank_transfers = this.db.bank_transfers.filter(t => t.id !== tId && t.id !== transferId && (tRef ? t.reference_no !== tRef : true));
     }
+    this.normalizeAllBalances();
     this.saveDatabaseToCache();
     this.renderActiveTab();
     this.showNotification(`Bank wire record "${label}" deleted successfully.`, 'info');
@@ -27757,6 +27846,7 @@ Scope of Work & Technical Execution:
                     <option value="Admin & Printing">Admin, Express Courier &amp; Blueprint Prints</option>
                     <option value="Emergency Repairs">Emergency Site Repairs &amp; Hardware</option>
                     <option value="Site Refreshment">Site Labor Refreshment &amp; Meals</option>
+                    <option value="Salary &amp; Labor Payout">Salary &amp; Labor Payout</option>
                     <option value="Municipal Fees">Municipal Permit &amp; Toll Fees</option>
                   </select>
                 </div>
@@ -27827,6 +27917,13 @@ Scope of Work & Technical Execution:
     const vNo = v ? (v.voucher_no || '') : '';
     if (!confirm(`Are you sure you want to delete petty cash voucher "${label}"?`)) return;
 
+    if (v && Array.isArray(this.db?.payroll)) {
+      this.db.payroll.forEach(p => {
+        if ((v.payroll_id && p.id === v.payroll_id) || (v.slip_no && p.slip_no === v.slip_no) || (p.slip_no && v.purpose && v.purpose.includes(p.slip_no))) {
+          p.status = 'Pending';
+        }
+      });
+    }
     if (this.db?.cash_vouchers) {
       this.db.cash_vouchers = this.db.cash_vouchers.filter(x => x.id !== vId && x.id !== voucherId && (vNo ? x.voucher_no !== vNo : true));
     }
