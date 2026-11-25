@@ -2194,6 +2194,14 @@ export function registerDocumentModules(FinanceApp) {
               background: transparent !important;
               padding: 0 !important;
             }
+            #fin-doc-print-modal .fin-document-paper {
+              min-height: 0 !important;
+              height: auto !important;
+              padding: 6mm 10mm 5mm 10mm !important;
+              margin: 0 auto !important;
+              page-break-after: avoid !important;
+              break-after: avoid !important;
+            }
           }
         </style>
         <div class="fin-doc-toolbar">
@@ -2248,7 +2256,7 @@ export function registerDocumentModules(FinanceApp) {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:9mm 14mm 8mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden; min-height:297mm; display:flex; flex-direction:column; justify-content:space-between;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:7mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden; min-height:auto; display:flex; flex-direction:column; justify-content:space-between;">
 
             <!-- Center Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark ? this.getRayanWatermark() : ''}
@@ -2306,55 +2314,55 @@ export function registerDocumentModules(FinanceApp) {
                 </div>
 
                 <!-- Addressee / Client Section -->
-                <div style="margin-bottom:0.85rem; padding:6px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="margin-bottom:0.55rem; padding:4px 8px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
                   <div>
-                    <div style="font-size:0.70rem; font-weight:700; color:#64748b;">To :</div>
-                    <div style="font-size:0.86rem; font-weight:800; color:#0f172a;" contenteditable="true" spellcheck="false">${cert.contact_person || cert.to_name || 'Project Manager'}</div>
-                    <div style="font-size:0.82rem; font-weight:700; color:#0284c7;" contenteditable="true" spellcheck="false">${cert.client_name || cert.to_company || 'M/S TOP ROCK INTERIORS LLC'}</div>
+                    <div style="font-size:0.65rem; font-weight:700; color:#64748b;">To :</div>
+                    <div style="font-size:0.78rem; font-weight:800; color:#0f172a;" contenteditable="true" spellcheck="false">${cert.contact_person || cert.to_name || 'Project Manager'}</div>
+                    <div style="font-size:0.74rem; font-weight:700; color:#0284c7;" contenteditable="true" spellcheck="false">${cert.client_name || cert.to_company || 'M/S TOP ROCK INTERIORS LLC'}</div>
                   </div>
-                  <div style="text-align:right; font-size:0.72rem; color:#64748b;">
+                  <div style="text-align:right; font-size:0.66rem; color:#64748b;">
                     <div>Contract Execution Handover</div>
                     <div style="font-weight:700; color:#10b981;">Final Work Completion</div>
                   </div>
                 </div>
 
                 <!-- Project Information Bilingual Box (Rayan Corporate Styling) -->
-                <div style="border:1px solid #cbd5e1; border-radius:4px; overflow:hidden; margin-bottom:1rem; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-                  <div style="background:#0f172a; color:#ffffff; padding:5px 12px; font-size:0.74rem; font-weight:800; letter-spacing:0.04em; text-transform:uppercase; display:flex; justify-content:space-between; align-items:center;">
+                <div style="border:1px solid #cbd5e1; border-radius:4px; overflow:hidden; margin-bottom:0.65rem; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                  <div style="background:#0f172a; color:#ffffff; padding:4px 10px; font-size:0.68rem; font-weight:800; letter-spacing:0.04em; text-transform:uppercase; display:flex; justify-content:space-between; align-items:center;">
                     <span>Project Information &amp; Technical Scope</span>
-                    <span style="font-family:'Amiri', serif; font-weight:700; font-size:0.82rem;">معلومات المشروع و نطاق العمل</span>
+                    <span style="font-family:'Amiri', serif; font-weight:700; font-size:0.74rem;">معلومات المشروع و نطاق العمل</span>
                   </div>
-                  <table style="width:100%; font-size:0.76rem; border-collapse:collapse; background:#ffffff;">
+                  <table style="width:100%; font-size:0.68rem; border-collapse:collapse; background:#ffffff;">
                     <tr style="border-bottom:1px solid #e2e8f0;">
-                      <td style="width:18%; font-weight:700; color:#475569; padding:5px 10px; background:#f8fafc;">Project # :</td>
-                      <td style="font-weight:700; color:#111827; padding:5px 10px;" contenteditable="true" spellcheck="false">${cert.project_name || 'The New Dubai Police Academy @ Alrowaiyah, Dubai Fit out Work'}</td>
-                      <td style="width:20%; text-align:right; font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:5px 10px;">المشروع#</td>
+                      <td style="width:16%; font-weight:700; color:#475569; padding:3px 8px; background:#f8fafc;">Project # :</td>
+                      <td style="font-weight:700; color:#111827; padding:3px 8px;" contenteditable="true" spellcheck="false">${cert.project_name || 'The New Dubai Police Academy @ Alrowaiyah, Dubai Fit out Work'}</td>
+                      <td style="width:18%; text-align:right; font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:3px 8px;">المشروع#</td>
                     </tr>
                     <tr style="border-bottom:1px solid #e2e8f0;">
-                      <td style="font-weight:700; color:#475569; padding:5px 10px; background:#f8fafc;">Client Name :</td>
-                      <td style="font-weight:800; color:#111827; padding:5px 10px;" contenteditable="true" spellcheck="false">${cert.client_name || 'M/S TOP ROCK INTERIORS LLC'}</td>
-                      <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:5px 10px;">اسم كلينت</td>
+                      <td style="font-weight:700; color:#475569; padding:3px 8px; background:#f8fafc;">Client Name :</td>
+                      <td style="font-weight:800; color:#111827; padding:3px 8px;" contenteditable="true" spellcheck="false">${cert.client_name || 'M/S TOP ROCK INTERIORS LLC'}</td>
+                      <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:3px 8px;">اسم كلينت</td>
                     </tr>
                     <tr style="border-bottom:1px solid #e2e8f0;">
-                      <td style="font-weight:700; color:#475569; padding:5px 10px; background:#f8fafc;">Main Client :</td>
-                      <td style="font-weight:700; color:#111827; padding:5px 10px;" contenteditable="true" spellcheck="false">${cert.main_client || 'Dubai Police General HQ / Engineering Department'}</td>
-                      <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:5px 10px;">كلينت الرئيسي</td>
+                      <td style="font-weight:700; color:#475569; padding:3px 8px; background:#f8fafc;">Main Client :</td>
+                      <td style="font-weight:700; color:#111827; padding:3px 8px;" contenteditable="true" spellcheck="false">${cert.main_client || 'Dubai Police General HQ / Engineering Department'}</td>
+                      <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:3px 8px;">كلينت الرئيسي</td>
                     </tr>
                     <tr style="border-bottom:1px solid #e2e8f0;">
-                      <td style="font-weight:700; color:#475569; padding:5px 10px; background:#f8fafc;">Contact Person :</td>
-                      <td style="font-weight:700; color:#111827; padding:5px 10px;" contenteditable="true" spellcheck="false">${cert.contact_person || 'Project Manager'}</td>
-                      <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:5px 10px;">اتصال شخص</td>
+                      <td style="font-weight:700; color:#475569; padding:3px 8px; background:#f8fafc;">Contact Person :</td>
+                      <td style="font-weight:700; color:#111827; padding:3px 8px;" contenteditable="true" spellcheck="false">${cert.contact_person || 'Project Manager'}</td>
+                      <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:3px 8px;">اتصال شخص</td>
                     </tr>
                     <tr>
-                      <td style="font-weight:700; color:#475569; padding:5px 10px; background:#f8fafc;">Email :</td>
-                      <td style="font-weight:700; color:#0284c7; padding:5px 10px;" contenteditable="true" spellcheck="false">${cert.email || 'procurementofficer@toprockinteriors.com'}</td>
-                      <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:5px 10px;">بريد إلكتروني</td>
+                      <td style="font-weight:700; color:#475569; padding:3px 8px; background:#f8fafc;">Email :</td>
+                      <td style="font-weight:700; color:#0284c7; padding:3px 8px;" contenteditable="true" spellcheck="false">${cert.email || 'procurementofficer@toprockinteriors.com'}</td>
+                      <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:3px 8px;">بريد إلكتروني</td>
                     </tr>
                   </table>
                 </div>
 
                 <!-- Dear Sir & Certification Declarations -->
-                <div style="font-size:0.80rem; line-height:1.55; color:#111827; margin-bottom:1.1rem;" contenteditable="true" spellcheck="false">
+                <div style="font-size:0.74rem; line-height:1.42; color:#111827; margin-bottom:0.7rem;" contenteditable="true" spellcheck="false">
                   <div style="font-weight:700; margin-bottom:6px;">Dear Sir,</div>
                   <div style="white-space:pre-line; margin-bottom:8px;">${cert.body_text || `With respect to the subjected agreement We, Rayan Engineering and Contracting LLC-SPC Confirm and Certify that all the works mentioned in the attached scope of work (PODSUB-2026/0810) Have been Satisfactorily Executed and Completed.
 (Wall Lining with Stud 50mm & Furring Channel Installation 567 Sqm)
@@ -2468,7 +2476,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
     @media print {
       @page { size: A4 portrait; margin: 6mm 8mm; }
       body { background: #fff; padding: 0; }
-      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 6mm 8mm !important; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; min-height: 0 !important; height: auto !important; padding: 6mm 8mm !important; }
     }
   </style>
 </head>
@@ -2703,8 +2711,8 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
       const reader = new FileReader();
       reader.onload = async () => {
         const base64Data = reader.result;
-        const formattedSize = file.size > 1024 * 1024 
-          ? (file.size / (1024 * 1024)).toFixed(2) + ' MB' 
+        const formattedSize = file.size > 1024 * 1024
+          ? (file.size / (1024 * 1024)).toFixed(2) + ' MB'
           : (file.size / 1024).toFixed(1) + ' KB';
 
         const updated = {
@@ -2725,7 +2733,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
 
         try {
           localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-        } catch (e) {}
+        } catch (e) { }
 
         this.closeModal('modal-wcc-signed-attachment');
         this.renderActiveTab();
@@ -2739,7 +2747,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
       cert.updated_at = new Date().toISOString();
       try {
         localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-      } catch (e) {}
+      } catch (e) { }
       this.closeModal('modal-wcc-signed-attachment');
       this.renderActiveTab();
       this.showNotification(`Signed certificate notes updated for ${cert.cert_no || cert.id}.`, 'success');
@@ -2774,7 +2782,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
 
     try {
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (e) {}
+    } catch (e) { }
 
     this.closeModal('modal-wcc-signed-attachment');
     this.renderActiveTab();
@@ -3283,7 +3291,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
     @media print {
       @page { size: A4 portrait; margin: 6mm 8mm; }
       body { background: #fff; padding: 0; }
-      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 6mm 8mm !important; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; min-height: 0 !important; height: auto !important; padding: 6mm 8mm !important; }
     }
   </style>
 </head>
