@@ -4466,6 +4466,9 @@ export function registerPayrollModules(FinanceApp) {
       (this.db?.companies || [])[0] || {};
     const compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
     const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
+    const compPhone = isIndia ? '+91 22 6984 5500' : '+971 2 565 4497';
+    const compEmail = isIndia ? 'info@ashaz-group.com' : 'info@rayan-group.com';
+    const compSite = isIndia ? 'http://ashaz-group.com' : 'http://rayan-group.com';
 
     const basicVal = Number(slip.basic_salary) || 9500;
     const accVal = Number(slip.accommodation_allowance) || 5500;
@@ -4522,9 +4525,6 @@ export function registerPayrollModules(FinanceApp) {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
-            <button type="button" class="fin-btn-print-action fin-btn-toggle-stamp" id="btn-toggle-stamp-sign" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off">
-              <span>🔲</span> Toggle Stamp &amp; Sign
-            </button>
             <button type="button" class="fin-btn-print-action" onclick="window.finApp.closeDocPrintModal(); window.finApp.openPayslipModal('${slip.id}')" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">
               <span>✏️</span> Edit Pay Slip (Form)
             </button>
@@ -4815,57 +4815,24 @@ export function registerPayrollModules(FinanceApp) {
                 </div>
               ` : ''}
 
-              <!-- Dual Authorised Signatures Section (2 Columns) -->
-              <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-top:0.5rem; padding-top:0.35rem; border-top:1px solid #cbd5e1; page-break-inside:avoid !important; break-inside:avoid !important;">
-                <colgroup>
-                  <col style="width:50%;">
-                  <col style="width:50%;">
-                </colgroup>
-                <tr>
-                  <!-- Left Column: Employee Acknowledgment -->
-                  <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
-                    <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                      EMPLOYEE ACKNOWLEDGMENT (إقرار الموظف)
-                    </div>
-                    <div style="position:relative; width:180px; height:70px; margin:0 auto; display:flex; align-items:center; justify-content:center;">
-                      <div style="border:1.5px dashed #94a3b8; border-radius:4px; width:170px; height:54px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#64748b; font-size:0.58rem; font-weight:700; background:#f8fafc; white-space:nowrap; box-sizing:border-box;">
-                        <div>[ Employee Acceptance &amp; Signature ]</div>
-                        <div style="font-size:0.52rem; color:#0284c7; margin-top:2px;">Received with thanks</div>
-                      </div>
-                    </div>
-                    <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
-                    <div style="font-size:0.64rem; font-weight:800; color:#111827;" contenteditable="true" spellcheck="false" title="Click to edit">${escapeHtml(slip.employee_name || 'Employee Signature')}</div>
-                    <div style="font-size:0.58rem; color:#4b5563;">Date: ${escapeHtml(slip.printed_date || '10-Jul-26')}</div>
-                  </td>
+              <!-- Notes Section Below Items -->
+              <div style="margin-top:1.25rem; font-size:0.80rem; color:#4b5563; line-height:1.4;">
+                <div style="font-weight:700; color:#111827; font-size:0.84rem; margin-bottom:2px;">Notes</div>
+                <div style="color:#4b5563;" contenteditable="true" spellcheck="false">Please keep a copy of this pay slip for your confidential personal tax and employment records.</div>
+              </div>
 
-                  <!-- Right Column: Rayan Engineering Authorised Signatory with signature first & corner stamp -->
-                  <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
-                    <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                      ${compName}
-                    </div>
-                    ${this.renderSignatureStampBlock ? this.renderSignatureStampBlock({
-                      wrapId: 'payslip-stamp-signature-wrap',
-                      sigId: 'payslip-signature',
-                      stampId: 'payslip-stamp',
-                      title: 'Authorised Signatory',
-                      subtitle: 'Arshad Alam Shaikh &bull; Managing Director',
-                      editable: true
-                    }) : ''}
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Notes & Best Wishes Section -->
-              <div style="margin-top:0.75rem; font-size:0.58rem; color:#475569; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
-                <div style="font-weight:700; color:#111827; margin-bottom:1px;">Notes:</div>
-                <div style="margin-bottom:2px; color:#475569;" contenteditable="true" spellcheck="false">Please keep a copy of this pay slip for your confidential personal tax and employment records.</div>
-                <div style="font-weight:800; color:#111827;">Best wishes,</div>
-                <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
-                <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;&bull;&nbsp; Hotline : +971 2 565 4497 &nbsp;&bull;&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;&bull;&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+              <!-- Contact & Company Details Below Notes (Address, Number, Email) -->
+              <div style="margin-top:0.85rem; font-size:0.80rem; color:#4b5563; line-height:1.5;">
+                <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+                <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
+                <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
+                <div>Hotline : ${compPhone}</div>
+                <div><a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a></div>
+                <div><a href="${compSite}" style="color:#0284c7; text-decoration:underline;">${compSite}</a></div>
               </div>
 
               <!-- Clean Fixed System-Generated Footer Below the Line (Spaced) -->
-              <div style="margin-top:1.15rem; padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; page-break-inside:avoid !important; break-inside:avoid !important;">
+              <div style="margin-top:1.5rem; padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; page-break-inside:avoid !important; break-inside:avoid !important;">
                 <div style="min-width:60px; font-weight:600; color:#9ca3af;">${escapeHtml(slip.slip_no || 'PSJune 2026/EN12001')}</div>
                 <div style="flex:1; text-align:center; letter-spacing:0.01em; font-weight:500;">
                   This is a system-generated Employee Pay Slip and does not require a signature or stamp.
