@@ -3522,7 +3522,7 @@ export function registerPayrollModules(FinanceApp) {
               <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:0.75rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Basic Salary *</label>
-                  <input type="number" step="0.01" name="basic_salary" id="fin-rec-basic" class="fin-form-input" required value="${basicSalary}" oninput="window.finApp.calcRecordPaymentTotals()" style="font-weight:700;">
+                  <input type="number" step="0.01" name="basic_salary" id="fin-rec-basic" class="fin-form-input" required value="${basicSalary}" oninput="window.finApp.onRecordBasicSalaryInput()" style="font-weight:700;">
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Accommodation</label>
@@ -3534,13 +3534,14 @@ export function registerPayrollModules(FinanceApp) {
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Overtime (AED)</label>
-                  <input type="number" step="0.01" name="normal_overtime" id="fin-rec-ot" class="fin-form-input" value="${otAmount}" oninput="window.finApp.calcRecordPaymentTotals()" style="font-weight:700;">
+                  <input type="number" step="0.01" name="normal_overtime" id="fin-rec-ot" class="fin-form-input" value="${otAmount}" oninput="window.finApp.onRecordOtAmountInput(this.value)" style="font-weight:700;">
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">OT Hours</label>
-                  <input type="text" name="overtime_hrs" id="fin-rec-ot-hrs" class="fin-form-input" value="${escapeHtml(otHrs)}" placeholder="e.g. 10.0">
+                  <input type="number" step="0.1" name="overtime_hrs" id="fin-rec-ot-hrs" class="fin-form-input" value="${escapeHtml(otHrs)}" placeholder="e.g. 10.0" oninput="window.finApp.onRecordOtHoursInput(this.value)" onblur="window.finApp.onRecordOtHoursBlur()">
                 </div>
               </div>
+              <div id="fin-rec-ot-hint" style="margin-top:0.4rem; font-size:0.70rem; color:#38bdf8; display:none; align-items:center; gap:6px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.22); border-radius:6px; padding:3px 8px;"></div>
             </div>
 
             <!-- Card 3: Deductions Breakdown (AED) -->
@@ -3640,6 +3641,11 @@ export function registerPayrollModules(FinanceApp) {
 
     this.showCustomModal(html);
     this.calcRecordPaymentTotals();
+    const initOtEl = document.getElementById('fin-rec-ot');
+    const initHrsEl = document.getElementById('fin-rec-ot-hrs');
+    if (this.updateOtCalculationHint) {
+      this.updateOtCalculationHint(initOtEl?.value || 0, initHrsEl?.value || 0);
+    }
   };
 
   proto.closeRecordEmployeePaymentModal = function () {
@@ -3747,6 +3753,11 @@ export function registerPayrollModules(FinanceApp) {
     }
 
     this.calcRecordPaymentTotals();
+    const chgOtEl = document.getElementById('fin-rec-ot');
+    const chgHrsEl = document.getElementById('fin-rec-ot-hrs');
+    if (this.updateOtCalculationHint) {
+      this.updateOtCalculationHint(chgOtEl?.value || 0, chgHrsEl?.value || 0);
+    }
   };
 
   proto.onRecordSourceTypeChange = function (type) {
@@ -3772,11 +3783,135 @@ export function registerPayrollModules(FinanceApp) {
     }
   };
 
+  proto.getOtHourlyRate = function (basicSalary) {
+    const basic = parseFloat(basicSalary) || 0;
+    if (basic <= 0) return 0;
+    // UAE Labour Law standard (Decree-Law No. 33 of 2021, Art. 19):
+    // 30 days * 8 hrs = 240 hrs. Standard OT rate = 1.25x basic hourly wage.
+    return (basic / 240) * 1.25;
+  };
+
+  proto.updateOtCalculationHint = function (otAmount, otHrs) {
+    const hintEl = document.getElementById('fin-rec-ot-hint');
+    if (!hintEl) return;
+    const basic = parseFloat(document.getElementById('fin-rec-basic')?.value) || 0;
+    const rate = this.getOtHourlyRate(basic);
+    if (rate > 0) {
+      const amt = parseFloat(otAmount) || 0;
+      const hrs = parseFloat(otHrs) || (amt > 0 ? (amt / rate) : 0);
+      hintEl.innerHTML = `⏱️ Overtime Rate: <strong>${formatMoney(rate)}/hr</strong> (1.25× basic) &bull; ${hrs.toFixed(1)} hrs = <strong>${formatMoney(amt)}</strong>`;
+      hintEl.style.display = 'flex';
+    } else {
+      hintEl.style.display = 'none';
+    }
+  };
+
+  proto.onRecordOtHoursInput = function (hoursVal) {
+    const rawVal = parseFloat(hoursVal);
+    const basic = parseFloat(document.getElementById('fin-rec-basic')?.value) || 0;
+    const rate = this.getOtHourlyRate(basic);
+    const otEl = document.getElementById('fin-rec-ot');
+
+    if (isNaN(rawVal) || rawVal <= 0) {
+      if (otEl) otEl.value = '0.00';
+      this.updateOtCalculationHint(0, 0);
+      this.calcRecordPaymentTotals();
+      return;
+    }
+
+    // If user enters a number greater than 150 (such as 2000 in the screenshot),
+    // they are entering the AED overtime amount directly into this box!
+    if (rawVal > 150) {
+      const otAmt = rawVal;
+      if (otEl) otEl.value = otAmt.toFixed(2);
+      const computedHrs = rate > 0 ? (otAmt / rate).toFixed(1) : '0.0';
+      this.updateOtCalculationHint(otAmt, computedHrs);
+    } else {
+      const otAmt = rate > 0 ? (rawVal * rate) : 0;
+      if (otEl) otEl.value = otAmt.toFixed(2);
+      this.updateOtCalculationHint(otAmt, rawVal);
+    }
+
+    this.calcRecordPaymentTotals();
+  };
+
+  proto.onRecordOtHoursBlur = function () {
+    const hrsEl = document.getElementById('fin-rec-ot-hrs');
+    if (!hrsEl) return;
+    const rawVal = parseFloat(hrsEl.value);
+    const basic = parseFloat(document.getElementById('fin-rec-basic')?.value) || 0;
+    const rate = this.getOtHourlyRate(basic);
+
+    // If user entered a value > 150 (e.g. 2000 AED), convert the hours input to actual hours on blur
+    if (!isNaN(rawVal) && rawVal > 150 && rate > 0) {
+      const actualHrs = (rawVal / rate).toFixed(1);
+      hrsEl.value = actualHrs;
+      const otEl = document.getElementById('fin-rec-ot');
+      if (otEl) otEl.value = rawVal.toFixed(2);
+      this.updateOtCalculationHint(rawVal, actualHrs);
+    }
+  };
+
+  proto.onRecordOtAmountInput = function (amountVal) {
+    const amt = parseFloat(amountVal);
+    const basic = parseFloat(document.getElementById('fin-rec-basic')?.value) || 0;
+    const rate = this.getOtHourlyRate(basic);
+    const hrsEl = document.getElementById('fin-rec-ot-hrs');
+
+    if (isNaN(amt) || amt <= 0) {
+      if (hrsEl) hrsEl.value = '0.0';
+      this.updateOtCalculationHint(0, 0);
+    } else {
+      const hrs = rate > 0 ? (amt / rate).toFixed(1) : '0.0';
+      if (hrsEl) hrsEl.value = hrs;
+      this.updateOtCalculationHint(amt, hrs);
+    }
+
+    this.calcRecordPaymentTotals();
+  };
+
+  proto.onRecordBasicSalaryInput = function () {
+    const basic = parseFloat(document.getElementById('fin-rec-basic')?.value) || 0;
+    const rate = this.getOtHourlyRate(basic);
+    const hrsEl = document.getElementById('fin-rec-ot-hrs');
+    const otEl = document.getElementById('fin-rec-ot');
+    const hrsVal = parseFloat(hrsEl?.value);
+
+    if (!isNaN(hrsVal) && hrsVal > 0 && rate > 0) {
+      if (hrsVal <= 150) {
+        const newOt = hrsVal * rate;
+        if (otEl) otEl.value = newOt.toFixed(2);
+        this.updateOtCalculationHint(newOt, hrsVal);
+      } else {
+        const otAmt = parseFloat(otEl?.value) || hrsVal;
+        const newHrs = (otAmt / rate).toFixed(1);
+        if (hrsEl) hrsEl.value = newHrs;
+        this.updateOtCalculationHint(otAmt, newHrs);
+      }
+    } else {
+      const otAmt = parseFloat(otEl?.value) || 0;
+      this.updateOtCalculationHint(otAmt, hrsVal || 0);
+    }
+
+    this.calcRecordPaymentTotals();
+  };
+
   proto.calcRecordPaymentTotals = function () {
     const basic = parseFloat(document.getElementById('fin-rec-basic')?.value) || 0;
     const acc = parseFloat(document.getElementById('fin-rec-acc')?.value) || 0;
     const cons = parseFloat(document.getElementById('fin-rec-cons')?.value) || 0;
-    const ot = parseFloat(document.getElementById('fin-rec-ot')?.value) || 0;
+    let ot = parseFloat(document.getElementById('fin-rec-ot')?.value) || 0;
+
+    // Fallback: If ot is 0 but OT Hours input has a value, compute it
+    const hrsEl = document.getElementById('fin-rec-ot-hrs');
+    const hrsVal = parseFloat(hrsEl?.value);
+    if (ot === 0 && !isNaN(hrsVal) && hrsVal > 0) {
+      const rate = this.getOtHourlyRate(basic);
+      ot = hrsVal > 150 ? hrsVal : (rate > 0 ? Math.round(hrsVal * rate * 100) / 100 : 0);
+      const otEl = document.getElementById('fin-rec-ot');
+      if (otEl) otEl.value = ot.toFixed(2);
+    }
+
     const totEarn = basic + acc + cons + ot;
 
     const adv = parseFloat(document.getElementById('fin-rec-adv')?.value) || 0;
@@ -3828,8 +3963,18 @@ export function registerPayrollModules(FinanceApp) {
     const basic = parseFloat(formData.get('basic_salary')) || 0;
     const acc = parseFloat(formData.get('accommodation_allowance')) || 0;
     const cons = parseFloat(formData.get('consolidated_allowance')) || 0;
-    const ot = parseFloat(formData.get('normal_overtime')) || 0;
-    const otHrs = (formData.get('overtime_hrs') || '').trim();
+    let ot = parseFloat(formData.get('normal_overtime')) || 0;
+    let otHrs = (formData.get('overtime_hrs') || '').trim();
+    const parsedHrs = parseFloat(otHrs) || 0;
+    if (ot === 0 && parsedHrs > 0) {
+      const rate = this.getOtHourlyRate ? this.getOtHourlyRate(basic) : ((basic / 240) * 1.25);
+      if (parsedHrs > 150) {
+        ot = parsedHrs;
+        otHrs = rate > 0 ? (parsedHrs / rate).toFixed(1) : '0.0';
+      } else {
+        ot = rate > 0 ? Math.round(parsedHrs * rate * 100) / 100 : 0;
+      }
+    }
     const totEarn = basic + acc + cons + ot;
 
     const adv = parseFloat(formData.get('advance_deduction')) || 0;
@@ -4803,6 +4948,26 @@ export function registerPayrollModules(FinanceApp) {
                         <td style="padding:4px 8px; text-align:center;"></td>
                         <td style="padding:4px 8px; text-align:right; font-weight:700; color:#111827;"><span contenteditable="true" spellcheck="false">${formatMoney(accVal, curr)}</span></td>
                       </tr>
+                      ${consVal > 0 ? `
+                      <tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="padding:4px 8px; color:#64748b;"><span contenteditable="true" spellcheck="false">10/07/2026</span></td>
+                        <td style="padding:4px 8px; font-weight:600; color:#111827;"><span contenteditable="true" spellcheck="false">Consolidated Allowance</span></td>
+                        <td style="padding:4px 8px; color:#475569;"><span contenteditable="true" spellcheck="false">Standard Earnings</span></td>
+                        <td style="padding:4px 8px;"><span contenteditable="true" spellcheck="false">Site Transport &amp; Perks</span></td>
+                        <td style="padding:4px 8px; text-align:center;"></td>
+                        <td style="padding:4px 8px; text-align:right; font-weight:700; color:#111827;"><span contenteditable="true" spellcheck="false">${formatMoney(consVal, curr)}</span></td>
+                      </tr>
+                      ` : ''}
+                      ${otVal > 0 ? `
+                      <tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="padding:4px 8px; color:#64748b;"><span contenteditable="true" spellcheck="false">10/07/2026</span></td>
+                        <td style="padding:4px 8px; font-weight:600; color:#111827;"><span contenteditable="true" spellcheck="false">Normal Overtime</span></td>
+                        <td style="padding:4px 8px; color:#475569;"><span contenteditable="true" spellcheck="false">Standard Earnings</span></td>
+                        <td style="padding:4px 8px;"><span contenteditable="true" spellcheck="false">Approved Site Overtime</span></td>
+                        <td style="padding:4px 8px; text-align:center;"><span contenteditable="true" spellcheck="false">${escapeHtml(slip.overtime_hrs || '')}</span></td>
+                        <td style="padding:4px 8px; text-align:right; font-weight:700; color:#111827;"><span contenteditable="true" spellcheck="false">${formatMoney(otVal, curr)}</span></td>
+                      </tr>
+                      ` : ''}
                     `}
                   </tbody>
                 </table>
